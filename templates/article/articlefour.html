@@ -1,0 +1,551 @@
+{% extends 'base.html' %}
+{% block title %}EOR vs Primary Recovery: What's the Difference and Why It Matters — EOR Solver{% endblock %}
+{% block content %}
+
+<style>
+.article-hero {
+    text-align: center;
+    margin-bottom: 32px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--border);
+}
+.article-hero h1 {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--navy);
+    margin: 12px 0 10px;
+    line-height: 1.35;
+    letter-spacing: -0.4px;
+}
+.article-hero p.lead {
+    font-size: 15px;
+    color: var(--text-muted);
+    max-width: 560px;
+    margin: 0 auto;
+    line-height: 1.7;
+}
+.article-meta {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+}
+.meta-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 20px;
+    background: var(--surface, #f4f6fb);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    letter-spacing: 0.3px;
+}
+
+.article-body {
+    font-size: 14.5px;
+    line-height: 1.8;
+    color: var(--text-main);
+}
+.article-body h2 {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--navy);
+    margin: 36px 0 12px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--accent);
+    display: inline-block;
+    letter-spacing: -0.2px;
+}
+.article-body h3 {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-main);
+    text-transform: none;
+    letter-spacing: 0;
+    margin: 24px 0 8px;
+}
+.article-body p { margin-bottom: 14px; }
+.article-body ul, .article-body ol { margin: 0 0 16px 20px; }
+.article-body li { margin-bottom: 6px; }
+.article-body strong { color: var(--navy); font-weight: 600; }
+
+/* ── STAGE OVERVIEW TABLE ── */
+.stages-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    margin: 20px 0;
+}
+.stages-table th {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.7);
+    padding: 10px 14px;
+    text-align: left;
+    background: var(--navy);
+    border: 1px solid rgba(255,255,255,0.1);
+}
+.stages-table td {
+    padding: 11px 14px;
+    border: 1px solid var(--border);
+    vertical-align: top;
+    line-height: 1.5;
+}
+.stages-table tr:nth-child(even) td { background: #fafbfe; }
+.stages-table td:first-child { font-weight: 600; color: var(--navy); }
+.rf-badge {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 20px;
+}
+.rf-primary   { background: rgba(26,82,184,0.10);  color: var(--navy-mid); }
+.rf-secondary { background: rgba(245,158,11,0.12); color: #92400e; }
+.rf-eor       { background: rgba(0,194,168,0.12);  color: #007a6b; }
+
+/* ── MECHANISM CARDS ── */
+.mechanism-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin: 16px 0;
+}
+.mechanism-card {
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 14px 16px;
+    background: #fafbfe;
+}
+.mechanism-card .mc-tag {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    display: block;
+    margin-bottom: 4px;
+}
+.mechanism-card .mc-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--navy);
+    display: block;
+    margin-bottom: 6px;
+}
+.mechanism-card .mc-rf {
+    font-size: 12px;
+    font-family: var(--mono);
+    color: var(--text-muted);
+    margin-bottom: 8px;
+    display: block;
+}
+.mechanism-card p {
+    font-size: 12.5px;
+    color: var(--text-muted);
+    line-height: 1.55;
+    margin: 0;
+}
+@media (max-width: 560px) { .mechanism-grid { grid-template-columns: 1fr; } }
+
+/* ── EOR METHOD CARDS ── */
+.eor-method {
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    margin: 14px 0;
+}
+.eor-method-header {
+    background: var(--surface, #f4f6fb);
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.eor-method-header .em-tag {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 20px;
+}
+.em-chemical { background: rgba(26,82,184,0.10); color: var(--navy-mid); }
+.em-thermal  { background: rgba(239,68,68,0.10); color: #b91c1c; }
+.em-miscible { background: rgba(0,194,168,0.12); color: #007a6b; }
+.eor-method-header .em-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--navy);
+}
+.eor-method-body {
+    padding: 14px 16px;
+    background: #fff;
+    font-size: 13.5px;
+    color: var(--text-muted);
+    line-height: 1.65;
+}
+.eor-method-body strong { color: var(--navy); }
+.eq-inline {
+    display: inline-block;
+    background: #f0f4ff;
+    border: 1px solid #d4ddf7;
+    border-radius: var(--radius-sm);
+    padding: 6px 12px;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    color: var(--navy-mid);
+    margin: 8px 0;
+}
+
+/* ── COMPARISON TABLE ── */
+.compare-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    margin: 16px 0;
+}
+.compare-table th {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    padding: 10px 14px;
+    text-align: left;
+    border: 1px solid var(--border);
+}
+.compare-table th:first-child { background: var(--surface, #f4f6fb); color: var(--text-dim); }
+.compare-table th:nth-child(2) { background: #eef2ff; color: var(--navy-mid); }
+.compare-table th:nth-child(3) { background: rgba(0,194,168,0.08); color: #007a6b; }
+.compare-table td {
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    vertical-align: top;
+    line-height: 1.5;
+}
+.compare-table td:first-child { font-weight: 600; color: var(--text-muted); background: #fafbfe; }
+.compare-table tr:nth-child(even) td:not(:first-child) { background: #fafbfe; }
+
+.callout {
+    background: var(--surface, #f4f6fb);
+    border-left: 4px solid var(--accent);
+    border-radius: 0 var(--radius-md) var(--radius-md) 0;
+    padding: 14px 18px;
+    margin: 20px 0;
+    font-size: 13.5px;
+    color: var(--text-muted);
+    line-height: 1.7;
+}
+.callout strong { color: var(--navy); }
+
+/* ── WHEN TO USE EOR ── */
+.criteria-list { margin: 0; padding: 0; list-style: none; }
+.criteria-list li {
+    display: flex;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13.5px;
+    line-height: 1.6;
+    align-items: flex-start;
+}
+.criteria-list li:last-child { border-bottom: none; }
+.criteria-check {
+    width: 22px;
+    height: 22px;
+    background: rgba(0,194,168,0.12);
+    color: #007a6b;
+    border-radius: 50%;
+    font-size: 12px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+.takeaways {
+    background: #f0f4ff;
+    border: 1px solid #d4ddf7;
+    border-radius: var(--radius-md);
+    padding: 20px 24px;
+    margin: 24px 0;
+}
+.takeaways h3 {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--navy);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    margin-bottom: 14px;
+}
+.takeaways ul { margin: 0; padding-left: 18px; }
+.takeaways li { font-size: 13.5px; color: var(--text-main); margin-bottom: 8px; line-height: 1.6; }
+
+.references {
+    border-top: 1px solid var(--border);
+    margin-top: 32px;
+    padding-top: 20px;
+}
+.references h3 {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 12px;
+}
+.references ul { margin: 0; padding-left: 18px; }
+.references li { font-size: 12.5px; color: var(--text-muted); margin-bottom: 6px; font-style: italic; }
+</style>
+
+<!-- HERO -->
+<div class="article-hero">
+    <div class="article-meta">
+        <span class="meta-pill"> Enhanced Oil Recovery</span>
+        <span class="meta-pill">⏱ ~8 min read</span>
+        <span class="meta-pill"> Beginner–Intermediate</span>
+    </div>
+    <h1>EOR vs Primary Recovery: What's the Difference and Why It Matters</h1>
+    <p class="lead">From natural depletion to chemical and thermal flooding — a clear breakdown of the three stages of oil recovery, what drives each one, and when EOR becomes the right choice.</p>
+</div>
+
+<div class="article-body">
+
+    <h2>The Three Stages of Oil Recovery</h2>
+
+    <table class="stages-table">
+        <thead>
+            <tr>
+                <th>Stage</th>
+                <th>Also Called</th>
+                <th>Mechanism</th>
+                <th>Typical RF</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Primary</td>
+                <td>Natural depletion</td>
+                <td>Natural reservoir energy</td>
+                <td><span class="rf-badge rf-primary">10 – 30%</span></td>
+            </tr>
+            <tr>
+                <td>Secondary</td>
+                <td>Pressure maintenance</td>
+                <td>Water or gas injection</td>
+                <td><span class="rf-badge rf-secondary">30 – 50%</span></td>
+            </tr>
+            <tr>
+                <td>EOR / Tertiary</td>
+                <td>Enhanced recovery</td>
+                <td>Chemical, thermal, miscible gas</td>
+                <td><span class="rf-badge rf-eor">40 – 70%</span></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="callout">
+        <strong>Note:</strong> These stages are not always sequential. EOR can begin right at the start of production — particularly for heavy oil or very heterogeneous reservoirs where primary recovery would be negligible.
+    </div>
+
+    <h2>Primary Recovery: Letting the Reservoir Do the Work</h2>
+    <p>Primary recovery relies entirely on the natural energy stored in the reservoir. Several mechanisms can be active:</p>
+
+    <div class="mechanism-grid">
+        <div class="mechanism-card">
+            <span class="mc-tag">Most common</span>
+            <span class="mc-name">Solution Gas Drive</span>
+            <span class="mc-rf">RF: 15 – 25%</span>
+            <p>As pressure drops below bubble point, dissolved gas comes out of solution and expands, pushing oil toward the wellbore. As gas breaks out, it becomes the preferential flow path, leaving oil behind.</p>
+        </div>
+        <div class="mechanism-card">
+            <span class="mc-tag">Structural advantage</span>
+            <span class="mc-name">Gas Cap Drive</span>
+            <span class="mc-rf">RF: 20 – 40%</span>
+            <p>A free gas cap above the oil zone expands downward as reservoir pressure falls, providing efficient displacement. RF depends on cap size and withdrawal rate.</p>
+        </div>
+        <div class="mechanism-card">
+            <span class="mc-tag">Most efficient natural</span>
+            <span class="mc-name">Natural Water Drive</span>
+            <span class="mc-rf">RF: 40 – 50%+</span>
+            <p>A connected aquifer influxes water as reservoir pressure drops, supporting pressure and displacing oil. When large and responsive, this is the most efficient natural mechanism.</p>
+        </div>
+        <div class="mechanism-card">
+            <span class="mc-tag">Structural control needed</span>
+            <span class="mc-name">Gravity Drainage</span>
+            <span class="mc-rf">RF: varies</span>
+            <p>In steeply dipping reservoirs, oil drains downward under gravity while gas fills from the top. Efficient at low withdrawal rates with good structural control.</p>
+        </div>
+    </div>
+
+    <h2>Secondary Recovery: Waterflooding</h2>
+    <p>Waterflooding injects water to maintain pressure and displace oil toward producers. Cheap, widely available, and reasonably effective — a well-designed waterflood adds 15–25% recovery on top of primary. However, water is not oil:</p>
+
+    <ul>
+        <li><strong>Viscous fingering</strong> — when water is less viscous than oil (unfavourable mobility ratio M &gt; 1)</li>
+        <li><strong>Gravity override</strong> — in thick reservoirs where water sinks below and bypasses upper oil</li>
+        <li><strong>Channeling</strong> — through high-permeability streaks that bypass lower-perm zones</li>
+    </ul>
+
+    <p>Even after a successful waterflood, 30–60% of the original oil remains as residual oil saturation (S<sub>or</sub>).</p>
+
+    <h2>EOR: Breaking Through the Residual Barrier</h2>
+    <p>EOR targets what primary and secondary recovery leave behind. Residual oil is trapped by three mechanisms that conventional flooding cannot overcome:</p>
+
+    <ul>
+        <li><strong>Capillary trapping</strong> — interfacial tension between oil and water traps oil in pore throats</li>
+        <li><strong>Viscous bypassing</strong> — unfavourable mobility ratios leave oil in less-permeable zones</li>
+        <li><strong>Wettability effects</strong> — oil-wet surfaces hold oil tenaciously, reducing displacement efficiency</li>
+    </ul>
+
+    <h2>EOR Methods</h2>
+
+    <div class="eor-method">
+        <div class="eor-method-header">
+            <span class="em-tag em-chemical">Chemical</span>
+            <span class="em-name">Polymer Flooding</span>
+        </div>
+        <div class="eor-method-body">
+            Polymers (HPAM or xanthan gum) increase injection water viscosity, reducing the mobility ratio and improving sweep. Primarily improves E<sub>v</sub> rather than E<sub>d</sub>.
+            <br><div class="eq-inline">M<sub>improved</sub> = (k<sub>rw</sub> / (μ<sub>w</sub> + polymer)) / (k<sub>ro</sub> / μ<sub>o</sub>)</div>
+        </div>
+    </div>
+
+    <div class="eor-method">
+        <div class="eor-method-header">
+            <span class="em-tag em-chemical">Chemical</span>
+            <span class="em-name">Surfactant &amp; Alkaline Flooding</span>
+        </div>
+        <div class="eor-method-body">
+            <strong>Surfactants</strong> reduce interfacial tension (IFT) between oil and water. At ultra-low IFT (10⁻³ to 10⁻⁴ mN/m), the capillary number N<sub>c</sub> exceeds its critical value and residual oil mobilises. <strong>Alkalis</strong> react with acidic crude components to generate surfactants in situ. Often combined in ASP (Alkaline-Surfactant-Polymer) flooding.
+            <br><div class="eq-inline">N<sub>c</sub> = v &times; &mu; / &sigma;</div>
+        </div>
+    </div>
+
+    <div class="eor-method">
+        <div class="eor-method-header">
+            <span class="em-tag em-thermal">Thermal</span>
+            <span class="em-name">Steamflooding &amp; SAGD</span>
+        </div>
+        <div class="eor-method-body">
+            Heat reduces oil viscosity dramatically — a heavy oil at 20°C with 10,000 cp might drop to 50 cp at 200°C. For heavy oils and tar sands, thermal recovery is often the only viable mechanism. Steam-Assisted Gravity Drainage (SAGD) is the dominant heavy oil recovery method in Canada and Venezuela.
+        </div>
+    </div>
+
+    <div class="eor-method">
+        <div class="eor-method-header">
+            <span class="em-tag em-miscible">Miscible Gas</span>
+            <span class="em-name">CO₂ Injection</span>
+        </div>
+        <div class="eor-method-body">
+            CO₂ injected above its Minimum Miscibility Pressure (MMP) achieves miscibility with reservoir oil — eliminating the interface between injected gas and oil so that capillary trapping disappears and S<sub>or</sub> theoretically goes to zero. CO₂ EOR also offers carbon storage co-benefits.
+            <br><div class="eq-inline">CO₂ MMP typically: 1,000 – 3,500 psia</div>
+        </div>
+    </div>
+
+    <h2>Primary vs EOR: Head-to-Head</h2>
+
+    <table class="compare-table">
+        <thead>
+            <tr>
+                <th>Factor</th>
+                <th>Primary Recovery</th>
+                <th>EOR</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Energy source</td>
+                <td>Natural reservoir energy</td>
+                <td>External (injection, thermal)</td>
+            </tr>
+            <tr>
+                <td>Cost</td>
+                <td>Low (drilling + lifting only)</td>
+                <td>High (chemicals, infrastructure)</td>
+            </tr>
+            <tr>
+                <td>Recovery factor</td>
+                <td>10 – 30%</td>
+                <td>Can reach 50 – 70% (cumulative)</td>
+            </tr>
+            <tr>
+                <td>Oil targeted</td>
+                <td>Easily mobile oil</td>
+                <td>Residual, viscous, or bypassed oil</td>
+            </tr>
+            <tr>
+                <td>Technical complexity</td>
+                <td>Low – Moderate</td>
+                <td>High</td>
+            </tr>
+            <tr>
+                <td>Timing of payback</td>
+                <td>Fast</td>
+                <td>Slow (long lead times)</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>When Is EOR the Right Choice?</h2>
+
+    <ul class="criteria-list">
+        <li>
+            <div class="criteria-check">✓</div>
+            <div><strong>Primary and secondary recovery leave significant oil behind</strong> — typical for viscous oils, heterogeneous reservoirs, or oil-wet formations.</div>
+        </li>
+        <li>
+            <div class="criteria-check">✓</div>
+            <div><strong>Oil price is high enough</strong> — EOR costs $15–50+/bbl in operating costs depending on method; economics must support it.</div>
+        </li>
+        <li>
+            <div class="criteria-check">✓</div>
+            <div><strong>Reservoir conditions are suitable</strong> — each EOR method has specific requirements (minimum temperature for CO₂ miscibility, permeability for polymer injectivity, etc.).</div>
+        </li>
+        <li>
+            <div class="criteria-check">✓</div>
+            <div><strong>Field infrastructure exists</strong> — mature fields with existing injection infrastructure reduce EOR project costs significantly.</div>
+        </li>
+    </ul>
+
+    <div class="callout">
+        <strong>The future — EOR from day one:</strong> An emerging philosophy in reservoir development designs for maximum total recovery from the start, rather than waiting until primary depletion. Especially relevant for heavy oil, tight/unconventional reservoirs, and offshore deepwater fields where re-entry for EOR later is prohibitively expensive.
+    </div>
+
+    <div class="takeaways">
+        <h3>Key Takeaways</h3>
+        <ul>
+            <li>Primary recovery uses natural reservoir energy and typically recovers only 10–30% of OOIP.</li>
+            <li>Secondary recovery (waterflooding) adds 15–25% by maintaining pressure and displacing oil.</li>
+            <li>EOR attacks the residual oil left after primary and secondary — through chemical, thermal, or miscible methods.</li>
+            <li>The right EOR method depends on oil viscosity, reservoir heterogeneity, temperature, and economics.</li>
+            <li>EOR is not a last resort — in many cases, it is the primary value driver of a field's total life economics.</li>
+        </ul>
+    </div>
+
+    <div class="references">
+        <h3>Further Reading</h3>
+        <ul>
+            <li>Lake, L.W., Johns, R., Rossen, B., Pope, G. — <em>Fundamentals of Enhanced Oil Recovery</em>, SPE</li>
+            <li>Green, D.W. and Willhite, G.P. — <em>Enhanced Oil Recovery</em>, SPE Textbook Vol. 6</li>
+            <li>IEA — <em>Tracking Clean Energy Progress: CO₂ Enhanced Oil Recovery</em></li>
+            <li>SPE-175427 — <em>Global EOR Status and Trends</em></li>
+        </ul>
+    </div>
+
+</div>
+
+<a href="/" class="back">&#8592; Back to Dashboard</a>
+
+{% endblock %}

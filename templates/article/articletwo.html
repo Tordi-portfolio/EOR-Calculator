@@ -1,0 +1,283 @@
+# Material Balance Equation Explained with Examples
+
+**Category:** Reservoir Engineering | **Reading Time:** ~9 min | **Level:** Intermediate
+
+---
+
+## Introduction
+
+The Material Balance Equation (MBE) is one of the most powerful tools in reservoir engineering. Often called the "tank model" of the reservoir, it is built on a deceptively simple idea: the total expansion of fluids in the reservoir must equal the total production from it (adjusted for any fluid influx or injection).
+
+Despite its simplicity in concept, the MBE is elegant in practice — it can be used to estimate OOIP, identify the dominant drive mechanism, predict future performance, and validate simulation models, all without a grid-based numerical simulator.
+
+This article explains the MBE from first principles, breaks down each term, and walks through worked examples.
+
+---
+
+## The Core Idea: Conservation of Volume
+
+Imagine a reservoir as a closed tank. At initial conditions, that tank is filled with oil, gas, and water at high pressure. When you open a well and produce fluids, the pressure drops. As pressure drops, the remaining fluids expand to fill the void left by what was produced.
+
+The MBE simply states:
+
+> **Volume of fluids produced = Volume of expansion of remaining reservoir fluids + Volume of fluid influx + Volume of injection**
+
+That's it. Every term in the MBE maps to one of these physical phenomena.
+
+---
+
+## The General MBE (Havlena-Odeh Form)
+
+The full general MBE for an undersaturated or solution-gas-drive reservoir (Craft, Hawkins & Terry form):
+
+```
+N × (Eo + m × Eg + Efw) + We + Winj × Bw + Ginj × Bg = Np × (Bo + (Rp − Rs) × Bg) + Wp × Bw
+```
+
+This can be rewritten in compact Havlena-Odeh notation:
+
+```
+F = N × Et + We
+```
+
+Where:
+- **F** = Total underground withdrawal (production side)
+- **N** = Original Oil in Place (STB)
+- **Et** = Total expansion term
+- **We** = Cumulative water influx from aquifer
+
+Let's define each production and expansion term carefully.
+
+---
+
+## Defining the Terms
+
+### Production Side — Underground Withdrawals (F)
+
+```
+F = Np × [Bo + (Rp − Rs) × Bg] + Wp × Bw
+```
+
+| Symbol | Meaning | Units |
+|--------|---------|-------|
+| Np | Cumulative oil produced | STB |
+| Bo | Oil formation volume factor | res bbl/STB |
+| Rp | Cumulative produced GOR | SCF/STB |
+| Rs | Solution GOR | SCF/STB |
+| Bg | Gas FVF | res bbl/SCF |
+| Wp | Cumulative water produced | STB |
+| Bw | Water FVF | res bbl/STB |
+
+### Expansion Side
+
+**Oil and dissolved gas expansion (Eo):**
+
+```
+Eo = (Bo − Boi) + (Rsi − Rs) × Bg
+```
+
+This captures how oil swells (Bo > Boi) and how dissolved gas is liberated as pressure falls below bubble point.
+
+**Gas cap expansion (Eg):**
+
+```
+Eg = Boi × [(Bg / Bgi) − 1]
+```
+
+If a gas cap exists, it expands as pressure drops, driving additional production.
+
+**Connate water and rock compressibility (Efw):**
+
+```
+Efw = (1 + m) × Boi × [(cw × Swi + cf) / (1 − Swi)] × ΔP
+```
+
+Where:
+- **m** = Ratio of initial gas cap volume to initial oil zone volume
+- **cw** = Water compressibility
+- **cf** = Formation (pore) compressibility
+- **Swi** = Initial water saturation
+- **ΔP** = Pressure drop from initial pressure
+
+**Total expansion:**
+
+```
+Et = Eo + m × Eg + Efw
+```
+
+---
+
+## Simplified Forms for Common Drive Mechanisms
+
+The full MBE simplifies depending on the dominant drive. Recognizing which terms dominate helps diagnose reservoir behavior.
+
+### 1. Volumetric Undersaturated Reservoir (P > Pb, no gas cap, no water influx)
+
+Below bubble point has not been reached. Only rock and fluid compressibility matter:
+
+```
+N = Np × Bo / [(Bo − Boi) + Boi × (cw × Swi + cf) / (1 − Swi) × ΔP]
+```
+
+At early life, this simplifies further to:
+
+```
+N ≈ Np × Bo / [Boi × ct × ΔP]
+```
+
+Where ct = co + cw × Swi + cf (total compressibility).
+
+### 2. Solution Gas Drive (P < Pb, no gas cap, no water influx)
+
+The most common drive mechanism for reservoirs without a gas cap or active aquifer:
+
+```
+N = F / Eo
+```
+
+This is the simplest useful form. Plot F vs Eo — if the relationship is linear through the origin, solution gas drive is confirmed and the slope gives N.
+
+### 3. Gas Cap Drive (m > 0, no water influx)
+
+```
+N = F / (Eo + m × Eg)
+```
+
+m must be estimated from log data or material balance history matching.
+
+### 4. Water Drive (active aquifer)
+
+```
+N × Et + We = F
+```
+
+The challenge here is that We is unknown and must be modeled (van Everdingen-Hurst, Fetkovich, etc.).
+
+---
+
+## Havlena-Odeh Straight-Line Method
+
+Havlena and Odeh (1963) transformed the MBE into a linear form that makes OOIP estimation and drive mechanism identification visual and intuitive.
+
+**For solution gas drive:**
+
+```
+F = N × Eo
+```
+
+Plot F (y-axis) vs Eo (x-axis). A straight line through the origin with slope N confirms solution gas drive and directly gives OOIP.
+
+**If the plot curves upward**, a gas cap or water influx is active. Adding m × Eg or a We term linearizes it again, confirming the drive.
+
+**For gas cap + solution gas drive:**
+
+```
+F / Eo = N + N × m × (Eg / Eo)
+```
+
+Plot F/Eo vs Eg/Eo → straight line with y-intercept = N and slope = N × m.
+
+---
+
+## Worked Example: Solution Gas Drive Reservoir
+
+**Reservoir data (at current conditions):**
+
+| Parameter | Value |
+|-----------|-------|
+| Boi | 1.350 res bbl/STB |
+| Bo | 1.412 res bbl/STB |
+| Rsi | 540 SCF/STB |
+| Rs | 480 SCF/STB |
+| Bg | 0.00210 res bbl/SCF |
+| Np | 1,850,000 STB |
+| Rp | 620 SCF/STB |
+| Wp | 0 STB (no water production) |
+
+**Step 1: Calculate underground withdrawal (F)**
+
+```
+F = Np × [Bo + (Rp − Rs) × Bg]
+F = 1,850,000 × [1.412 + (620 − 480) × 0.00210]
+F = 1,850,000 × [1.412 + 0.294]
+F = 1,850,000 × 1.706
+F = 3,156,100 res bbl
+```
+
+**Step 2: Calculate oil expansion (Eo)**
+
+```
+Eo = (Bo − Boi) + (Rsi − Rs) × Bg
+Eo = (1.412 − 1.350) + (540 − 480) × 0.00210
+Eo = 0.062 + 0.126
+Eo = 0.188 res bbl/STB (assuming no gas cap or water)
+```
+
+Wait — Rsi > Rs means gas is coming out of solution, which is an expansion. Let's correct:
+
+```
+Eo = (Bo − Boi) + (Rsi − Rs) × Bg
+   = (1.412 − 1.350) + (540 − 480) × 0.00210
+   = 0.062 + 0.0630
+   = 0.1250 res bbl/STB
+```
+
+**Step 3: Estimate OOIP**
+
+```
+N = F / Eo = 3,156,100 / 0.1250 = 25,249,000 STB ≈ 25.25 MMSTB
+```
+
+**Interpretation:** The reservoir has an OOIP of approximately 25.25 million STB. With 1.85 MMSTB produced, the current recovery factor is:
+
+```
+RF = 1,850,000 / 25,250,000 = 7.3%
+```
+
+Early stage. Significant production potential remains.
+
+---
+
+## Common Mistakes When Applying the MBE
+
+**1. Using surface volumes instead of reservoir volumes**
+Always convert production to reservoir conditions using Bo, Bg, and Bw. Surface and reservoir volumes differ significantly.
+
+**2. Ignoring rock compressibility in tight reservoirs**
+In low-permeability or overpressured reservoirs, cf can be large enough to affect the balance materially.
+
+**3. Assuming no water influx too early**
+An active aquifer can mask solution gas drive on a Havlena-Odeh plot if We is not accounted for — the F vs Eo plot will curve upward, appearing to show influx-free behavior at first, then diverging.
+
+**4. Using average reservoir pressure incorrectly**
+The MBE requires average reservoir pressure, not wellbore pressure. Pressure buildup tests or reservoir simulators are needed to obtain accurate average pressures.
+
+---
+
+## Why the MBE Matters
+
+The MBE is not just a textbook exercise:
+
+- It gives an independent OOIP estimate that can be compared to volumetric calculations.
+- It confirms or identifies the dominant drive mechanism, which determines the most appropriate EOR strategy.
+- It serves as a history-matching tool to calibrate numerical simulators.
+- It can forecast future production under various pressure depletion scenarios.
+
+---
+
+## Key Takeaways
+
+- The MBE is a conservation of volume statement: production = fluid expansion + influx + injection.
+- The Havlena-Odeh straight-line method linearizes the MBE for easy OOIP estimation and drive identification.
+- Different drive mechanisms (solution gas, gas cap, water influx) leave identifiable signatures on the Havlena-Odeh plot.
+- Accurate average reservoir pressure data is essential for reliable MBE results.
+- Always account for all production streams: oil, free gas, and water.
+
+---
+
+## Further Reading
+
+- Havlena, D. and Odeh, A.S. (1963) — *The Material Balance as an Equation of a Straight Line*, JPT
+- Craft, B.C., Hawkins, M., Terry, R.E. — *Applied Petroleum Reservoir Engineering*, 3rd Ed.
+- Ahmed, T. — *Reservoir Engineering Handbook*, 5th Ed.
+- Dake, L.P. — *Fundamentals of Reservoir Engineering*

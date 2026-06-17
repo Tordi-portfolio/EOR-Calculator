@@ -186,19 +186,19 @@ table.data-table tbody td input {
 .status-unit { background: rgba(26,82,184,0.10); color: var(--navy-mid); }
 </style>
 
-<!-- PAGE HEADER -->
+
 <div class="page-header">
     <span class="badge">Sweep & Flow</span>
     <h1>Fractional Flow Curve <span style="font-size:15px; color:var(--text-muted); font-weight:400;">(F<sub>w</sub> vs S<sub>w</sub>)</span></h1>
     <p>Plots the fraction of water flowing at the producing end of the reservoir against water saturation, used to evaluate displacement efficiency.</p>
 </div>
 
-<!-- FORMULA -->
+
 <div class="formula">
     F<sub>w</sub> = f(S<sub>w</sub>) &nbsp;&mdash;&nbsp; plotted point-by-point from tabulated data
 </div>
 
-<!-- CONTEXT STRIP -->
+
 <div class="info-strip">
     <div class="info-cell">
         <span class="ic-label">Data Points</span>
@@ -214,7 +214,7 @@ table.data-table tbody td input {
     </div>
 </div>
 
-<!-- FORM -->
+
 <form method="POST">
     {% csrf_token %}
 
@@ -251,7 +251,7 @@ table.data-table tbody td input {
     <button type="submit">Generate Graph</button>
 </form>
 
-<!-- RESULT -->
+
 {% if plot_data %}
 
 <div class="result-card">

@@ -1,0 +1,533 @@
+{% extends 'base.html' %}
+{% block title %}How to Calculate Recovery Factor in EOR — EOR Solver{% endblock %}
+{% block content %}
+
+<style>
+/* ── ARTICLE LAYOUT ── */
+.article-hero {
+    text-align: center;
+    margin-bottom: 32px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--border);
+}
+.article-hero h1 {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--navy);
+    margin: 12px 0 10px;
+    line-height: 1.35;
+    letter-spacing: -0.4px;
+}
+.article-hero p.lead {
+    font-size: 15px;
+    color: var(--text-muted);
+    max-width: 560px;
+    margin: 0 auto;
+    line-height: 1.7;
+}
+.article-meta {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+}
+.meta-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 20px;
+    background: var(--surface, #f4f6fb);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    letter-spacing: 0.3px;
+}
+
+/* ── PROSE ── */
+.article-body {
+    font-size: 14.5px;
+    line-height: 1.8;
+    color: var(--text-main);
+}
+.article-body h2 {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--navy);
+    margin: 36px 0 12px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--accent);
+    display: inline-block;
+    letter-spacing: -0.2px;
+}
+.article-body h3 {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-main);
+    text-transform: none;
+    letter-spacing: 0;
+    margin: 24px 0 8px;
+}
+.article-body p {
+    margin-bottom: 14px;
+}
+.article-body ul, .article-body ol {
+    margin: 0 0 16px 20px;
+}
+.article-body li {
+    margin-bottom: 6px;
+}
+.article-body strong {
+    color: var(--navy);
+    font-weight: 600;
+}
+
+/* ── CODE / FORMULA BLOCKS ── */
+.eq-block {
+    background: #f0f4ff;
+    border: 1px solid #d4ddf7;
+    border-radius: var(--radius-md);
+    padding: 14px 20px;
+    margin: 16px 0;
+    font-family: var(--mono);
+    font-size: 14px;
+    color: var(--navy-mid);
+    text-align: center;
+    line-height: 1.9;
+}
+.eq-block .eq-label {
+    font-family: var(--sans);
+    font-size: 11px;
+    color: var(--text-dim);
+    display: block;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    font-weight: 600;
+}
+
+/* ── SYMBOL TABLE ── */
+.sym-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    margin: 16px 0;
+}
+.sym-table th {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    padding: 8px 12px;
+    text-align: left;
+    background: var(--surface, #f4f6fb);
+    border: 1px solid var(--border);
+}
+.sym-table td {
+    padding: 9px 12px;
+    border: 1px solid var(--border);
+    color: var(--text-main);
+    font-size: 13px;
+}
+.sym-table td:first-child {
+    font-family: var(--mono);
+    font-weight: 600;
+    color: var(--navy-mid);
+    white-space: nowrap;
+}
+.sym-table tr:nth-child(even) td { background: #fafbfe; }
+
+/* ── CALLOUT BOX ── */
+.callout {
+    background: var(--surface, #f4f6fb);
+    border-left: 4px solid var(--accent);
+    border-radius: 0 var(--radius-md) var(--radius-md) 0;
+    padding: 14px 18px;
+    margin: 20px 0;
+    font-size: 13.5px;
+    color: var(--text-muted);
+    line-height: 1.7;
+}
+.callout strong { color: var(--navy); }
+
+/* ── WORKED EXAMPLE ── */
+.example-card {
+    border: 1.5px solid #d4ddf7;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    margin: 24px 0;
+}
+.example-card-header {
+    background: var(--navy);
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.example-card-header span {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.6);
+}
+.example-card-body {
+    padding: 20px 24px;
+    background: #fff;
+}
+.example-step {
+    display: flex;
+    gap: 14px;
+    margin-bottom: 18px;
+    align-items: flex-start;
+}
+.example-step:last-child { margin-bottom: 0; }
+.step-num {
+    width: 26px;
+    height: 26px;
+    background: var(--navy);
+    color: #fff;
+    border-radius: 50%;
+    font-size: 12px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+.step-body { flex: 1; }
+.step-body p { margin: 0 0 6px; font-size: 13.5px; }
+.step-body .eq-block { margin: 8px 0; text-align: left; }
+
+/* ── STAGE CARDS ── */
+.stage-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+    margin: 20px 0;
+}
+.stage-card {
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 14px 16px;
+    text-align: center;
+}
+.stage-card .s-num {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    display: block;
+    margin-bottom: 4px;
+}
+.stage-card .s-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--navy);
+    display: block;
+    margin-bottom: 6px;
+}
+.stage-card .s-rf {
+    font-size: 18px;
+    font-weight: 700;
+    font-family: var(--mono);
+    color: var(--navy);
+    display: block;
+    margin-bottom: 4px;
+}
+.stage-card .s-mech {
+    font-size: 11px;
+    color: var(--text-muted);
+    line-height: 1.4;
+}
+.stage-primary   { border-color: #d4ddf7; }
+.stage-secondary { border-color: #f59e0b44; }
+.stage-eor       { border-color: rgba(0,194,168,0.35); }
+.stage-primary .s-rf   { color: var(--navy-mid); }
+.stage-secondary .s-rf { color: #92400e; }
+.stage-eor .s-rf       { color: #007a6b; }
+@media (max-width: 560px) {
+    .stage-grid { grid-template-columns: 1fr; }
+}
+
+/* ── FACTOR TABLE ── */
+.factor-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    margin: 16px 0;
+}
+.factor-table th {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    padding: 8px 14px;
+    text-align: left;
+    background: var(--surface, #f4f6fb);
+    border: 1px solid var(--border);
+}
+.factor-table td {
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    color: var(--text-main);
+    vertical-align: top;
+    line-height: 1.5;
+}
+.factor-table tr:nth-child(even) td { background: #fafbfe; }
+.factor-table td:first-child {
+    font-weight: 600;
+    color: var(--navy-mid);
+    white-space: nowrap;
+}
+
+/* ── TAKEAWAYS ── */
+.takeaways {
+    background: #f0f4ff;
+    border: 1px solid #d4ddf7;
+    border-radius: var(--radius-md);
+    padding: 20px 24px;
+    margin: 24px 0;
+}
+.takeaways h3 {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--navy);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    margin-bottom: 14px;
+}
+.takeaways ul {
+    margin: 0;
+    padding-left: 18px;
+}
+.takeaways li {
+    font-size: 13.5px;
+    color: var(--text-main);
+    margin-bottom: 8px;
+    line-height: 1.6;
+}
+
+/* ── REFERENCES ── */
+.references {
+    border-top: 1px solid var(--border);
+    margin-top: 32px;
+    padding-top: 20px;
+}
+.references h3 {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 12px;
+}
+.references ul {
+    margin: 0;
+    padding-left: 18px;
+}
+.references li {
+    font-size: 12.5px;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+    font-style: italic;
+}
+</style>
+
+<!-- HERO -->
+<div class="article-hero">
+    <div class="article-meta">
+        <span class="meta-pill"> Enhanced Oil Recovery</span>
+        <span class="meta-pill">⏱ ~8 min read</span>
+        <span class="meta-pill"> Intermediate</span>
+    </div>
+    <h1>How to Calculate Recovery Factor in EOR</h1>
+    <p class="lead">What fraction of the original oil in place can you actually produce? Recovery factor is the single most important metric in petroleum engineering — here's how it's calculated and how EOR changes the equation.</p>
+</div>
+
+<!-- BODY -->
+<div class="article-body">
+
+    <h2>What Is Recovery Factor?</h2>
+    <p>Recovery factor is defined as the ratio of recoverable oil to the original oil in place. A recovery factor of 0.35 means 35% of the oil originally in the reservoir will be produced over the life of the field — the remaining 65% stays in the ground, either too costly to produce or physically unreachable with current technology.</p>
+
+    <div class="eq-block">
+        <span class="eq-label">Recovery Factor</span>
+        RF = N<sub>p</sub> / N
+    </div>
+
+    <table class="sym-table">
+        <thead><tr><th>Symbol</th><th>Description</th><th>Unit</th></tr></thead>
+        <tbody>
+            <tr><td>N<sub>p</sub></td><td>Cumulative oil produced</td><td>STB</td></tr>
+            <tr><td>N</td><td>Original Oil in Place (OOIP)</td><td>STB</td></tr>
+            <tr><td>RF</td><td>Recovery Factor</td><td>fraction or %</td></tr>
+        </tbody>
+    </table>
+
+    <h2>How Is OOIP Calculated?</h2>
+    <p>Before you can calculate RF, you need to know your OOIP. The volumetric method gives:</p>
+
+    <div class="eq-block">
+        N = (7758 &times; A &times; h &times; &phi; &times; (1 &minus; S<sub>wi</sub>)) / B<sub>oi</sub>
+    </div>
+
+    <table class="sym-table">
+        <thead><tr><th>Symbol</th><th>Description</th><th>Unit</th></tr></thead>
+        <tbody>
+            <tr><td>7758</td><td>Unit conversion factor</td><td>bbl/acre-ft</td></tr>
+            <tr><td>A</td><td>Drainage area</td><td>acres</td></tr>
+            <tr><td>h</td><td>Net pay thickness</td><td>ft</td></tr>
+            <tr><td>&phi;</td><td>Porosity</td><td>fraction</td></tr>
+            <tr><td>S<sub>wi</sub></td><td>Initial water saturation</td><td>fraction</td></tr>
+            <tr><td>B<sub>oi</sub></td><td>Initial oil formation volume factor</td><td>res bbl/STB</td></tr>
+        </tbody>
+    </table>
+
+    <p>This gives you N in stock-tank barrels. From there, if you know cumulative production or can estimate recoverable reserves, you calculate RF directly. <a href="/ooip/" style="color:var(--navy-light);font-weight:500;">Use the OOIP calculator →</a></p>
+
+    <h2>Recovery Factor by Recovery Stage</h2>
+
+    <div class="stage-grid">
+        <div class="stage-card stage-primary">
+            <span class="s-num">Stage 1</span>
+            <span class="s-name">Primary Recovery</span>
+            <span class="s-rf">10 – 30%</span>
+            <span class="s-mech">Natural reservoir energy: pressure, solution gas, gravity, water influx</span>
+        </div>
+        <div class="stage-card stage-secondary">
+            <span class="s-num">Stage 2</span>
+            <span class="s-name">Secondary Recovery</span>
+            <span class="s-rf">30 – 50%</span>
+            <span class="s-mech">Waterflooding or gas injection; adds 15–25 percentage points</span>
+        </div>
+        <div class="stage-card stage-eor">
+            <span class="s-num">Stage 3</span>
+            <span class="s-name">EOR / Tertiary</span>
+            <span class="s-rf">40 – 70%</span>
+            <span class="s-mech">Chemical, thermal, miscible gas; attacks residual oil saturation S<sub>or</sub></span>
+        </div>
+    </div>
+
+    <h2>Breaking Down Recovery Factor: The Component Approach</h2>
+    <p>Recovery factor can be decomposed into efficiency terms:</p>
+
+    <div class="eq-block">RF = E<sub>v</sub> &times; E<sub>d</sub></div>
+
+    <h3>Displacement Efficiency</h3>
+    <p>Tells you how completely oil is displaced in areas the flood has contacted. A good waterflood might achieve E<sub>d</sub> = 0.60–0.75. EOR methods aim to reduce S<sub>or</sub> further, driving E<sub>d</sub> toward 0.85–0.95.</p>
+
+    <div class="eq-block">
+        E<sub>d</sub> = (S<sub>oi</sub> &minus; S<sub>or</sub>) / S<sub>oi</sub>
+    </div>
+
+    <h3>Volumetric Sweep Efficiency</h3>
+    <p>Accounts for the fact that injected fluids don't sweep the entire reservoir uniformly. Channeling, fingering, and gravity override all reduce E<sub>v</sub>. It is itself a product of areal and invasion sweep:</p>
+
+    <div class="eq-block">E<sub>v</sub> = E<sub>a</sub> &times; E<sub>i</sub></div>
+
+    <div class="callout">
+        <strong>Key insight:</strong> Improving E<sub>v</sub> — through well pattern optimisation, mobility control, or conformance treatments — is often where the largest EOR gains are found. Both components must be addressed for meaningful improvement in total RF.
+    </div>
+
+    <h2>Worked Example</h2>
+
+    <div class="example-card">
+        <div class="example-card-header">
+            <span>Worked Example</span>
+            <span>Recovery Factor &amp; EOR Scenario</span>
+        </div>
+        <div class="example-card-body">
+
+            <p style="font-size:13px;color:var(--text-muted);margin-bottom:18px;">
+                <strong>Given:</strong> N = 50,000,000 STB &nbsp;|&nbsp; N<sub>p</sub> = 12,500,000 STB &nbsp;|&nbsp; S<sub>wi</sub> = 0.22 &nbsp;|&nbsp; S<sub>or</sub> (waterflood) = 0.28
+            </p>
+
+            <div class="example-step">
+                <div class="step-num">1</div>
+                <div class="step-body">
+                    <p><strong>Primary + Secondary RF</strong></p>
+                    <div class="eq-block">RF = 12,500,000 / 50,000,000 = <strong>0.25 (25%)</strong></div>
+                </div>
+            </div>
+
+            <div class="example-step">
+                <div class="step-num">2</div>
+                <div class="step-body">
+                    <p><strong>Displacement Efficiency</strong> &nbsp;(S<sub>oi</sub> = 1 − 0.22 = 0.78)</p>
+                    <div class="eq-block">E<sub>d</sub> = (0.78 &minus; 0.28) / 0.78 = <strong>0.641 (64.1%)</strong></div>
+                </div>
+            </div>
+
+            <div class="example-step">
+                <div class="step-num">3</div>
+                <div class="step-body">
+                    <p><strong>Implied Volumetric Sweep</strong></p>
+                    <div class="eq-block">E<sub>v</sub> = RF / E<sub>d</sub> = 0.25 / 0.641 = <strong>0.39 (39%)</strong></div>
+                    <p style="font-size:13px;color:var(--text-muted);">Only 39% of the reservoir volume was contacted — a major opportunity for EOR intervention.</p>
+                </div>
+            </div>
+
+            <div class="example-step">
+                <div class="step-num">4</div>
+                <div class="step-body">
+                    <p><strong>EOR Scenario</strong> — polymer flooding improves E<sub>v</sub> to 0.65; S<sub>or</sub> drops to 0.18</p>
+                    <div class="eq-block">
+                        E<sub>d,EOR</sub> = (0.78 &minus; 0.18) / 0.78 = 0.769<br>
+                        RF<sub>EOR</sub> = 0.65 &times; 0.769 = <strong>0.50 (50%)</strong><br>
+                        Incremental EOR = 50% &minus; 25% = <strong>25% of OOIP = 12,500,000 STB</strong>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <h2>What Affects Recovery Factor in EOR?</h2>
+
+    <table class="factor-table">
+        <thead><tr><th>Factor</th><th>Effect on RF</th></tr></thead>
+        <tbody>
+            <tr><td>Reservoir heterogeneity</td><td>High heterogeneity reduces E<sub>v</sub>; conformance EOR helps</td></tr>
+            <tr><td>Oil viscosity</td><td>High viscosity worsens mobility ratio; thermal or polymer EOR needed</td></tr>
+            <tr><td>Wettability</td><td>Oil-wet rocks trap more oil; surfactant/alkaline EOR alters wettability</td></tr>
+            <tr><td>Interfacial tension</td><td>High IFT leaves residual oil; surfactant flooding reduces IFT</td></tr>
+            <tr><td>Capillary number</td><td>Increasing N<sub>c</sub> beyond critical value mobilizes residual oil</td></tr>
+            <tr><td>Permeability contrast</td><td>High contrast causes channeling; polymer or gel treatments help</td></tr>
+        </tbody>
+    </table>
+
+    <div class="takeaways">
+        <h3>Key Takeaways</h3>
+        <ul>
+            <li>Recovery factor measures what fraction of OOIP is actually produced.</li>
+            <li>Primary recovery rarely exceeds 30%; secondary adds 15–25%; EOR can push totals to 50–70%.</li>
+            <li>RF = E<sub>v</sub> × E<sub>d</sub> — both components must be addressed for meaningful EOR gains.</li>
+            <li>Displacement efficiency improves when residual oil saturation (S<sub>or</sub>) is reduced.</li>
+            <li>Volumetric sweep efficiency improves with better mobility control and conformance.</li>
+            <li>Every percentage point of incremental RF on a large reservoir represents millions of barrels of additional revenue.</li>
+        </ul>
+    </div>
+
+    <div class="references">
+        <h3>Further Reading</h3>
+        <ul>
+            <li>Craft, Hawkins &amp; Terry — <em>Applied Petroleum Reservoir Engineering</em></li>
+            <li>Craig — <em>The Reservoir Engineering Aspects of Waterflooding</em></li>
+            <li>Lake et al. — <em>Fundamentals of Enhanced Oil Recovery</em></li>
+            <li>SPE Monograph Series on EOR Methods</li>
+        </ul>
+    </div>
+
+</div>
+
+<a href="/" class="back">&#8592; Back to Dashboard</a>
+
+{% endblock %}

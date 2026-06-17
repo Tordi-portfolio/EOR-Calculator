@@ -1,0 +1,600 @@
+{% extends 'base.html' %}
+{% block title %}Reservoir Engineering Formulas Every Student Should Know — EOR Solver{% endblock %}
+{% block content %}
+
+<style>
+.article-hero {
+    text-align: center;
+    margin-bottom: 32px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--border);
+}
+.article-hero h1 {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--navy);
+    margin: 12px 0 10px;
+    line-height: 1.35;
+    letter-spacing: -0.4px;
+}
+.article-hero p.lead {
+    font-size: 15px;
+    color: var(--text-muted);
+    max-width: 560px;
+    margin: 0 auto;
+    line-height: 1.7;
+}
+.article-meta {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+}
+.meta-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 20px;
+    background: var(--surface, #f4f6fb);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    letter-spacing: 0.3px;
+}
+
+.article-body {
+    font-size: 14.5px;
+    line-height: 1.8;
+    color: var(--text-main);
+}
+.article-body h2 {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--navy);
+    margin: 36px 0 12px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--accent);
+    display: inline-block;
+    letter-spacing: -0.2px;
+}
+.article-body h3 {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-main);
+    text-transform: none;
+    letter-spacing: 0;
+    margin: 24px 0 8px;
+}
+.article-body p { margin-bottom: 14px; }
+.article-body ul, .article-body ol { margin: 0 0 16px 20px; }
+.article-body li { margin-bottom: 6px; }
+.article-body strong { color: var(--navy); font-weight: 600; }
+
+/* ── TOPIC NAV ── */
+.topic-nav {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 8px;
+    margin-bottom: 28px;
+    padding: 16px;
+    background: var(--surface, #f4f6fb);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+}
+.topic-nav a {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--navy-light);
+    text-decoration: none;
+    padding: 5px 8px;
+    border-radius: var(--radius-sm);
+    transition: var(--transition);
+}
+.topic-nav a:hover {
+    background: #e8eeff;
+    color: var(--navy);
+}
+.topic-nav-label {
+    grid-column: 1 / -1;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 4px;
+}
+
+/* ── FORMULA CARD ── */
+.formula-card {
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    margin: 16px 0;
+}
+.formula-card-header {
+    background: var(--surface, #f4f6fb);
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.formula-card-header .fc-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--navy);
+}
+.formula-card-header .fc-tag {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+}
+.formula-card-body { padding: 14px 16px; background: #fff; }
+.eq-block {
+    background: #f0f4ff;
+    border: 1px solid #d4ddf7;
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    margin: 10px 0;
+    font-family: var(--mono);
+    font-size: 13.5px;
+    color: var(--navy-mid);
+    text-align: center;
+    line-height: 1.8;
+}
+.eq-note {
+    font-size: 12.5px;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin-top: 8px;
+}
+
+/* ── SYMBOL TABLE ── */
+.sym-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12.5px;
+    margin: 10px 0;
+}
+.sym-table th {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    padding: 7px 10px;
+    text-align: left;
+    background: var(--surface, #f4f6fb);
+    border: 1px solid var(--border);
+}
+.sym-table td {
+    padding: 7px 10px;
+    border: 1px solid var(--border);
+    color: var(--text-main);
+}
+.sym-table td:first-child {
+    font-family: var(--mono);
+    font-weight: 600;
+    color: var(--navy-mid);
+    white-space: nowrap;
+}
+.sym-table tr:nth-child(even) td { background: #fafbfe; }
+
+/* ── REFERENCE TABLE ── */
+.ref-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    margin: 16px 0;
+}
+.ref-table th {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    padding: 9px 14px;
+    text-align: left;
+    background: var(--navy);
+    color: rgba(255,255,255,0.7);
+    border: 1px solid rgba(255,255,255,0.1);
+}
+.ref-table td {
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    color: var(--text-main);
+    vertical-align: top;
+}
+.ref-table td:first-child {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--navy-mid);
+    background: #fafbfe;
+}
+.ref-table tr:nth-child(even) td { background: #f9fbff; }
+.ref-table tr:nth-child(even) td:first-child { background: #f0f4ff; }
+
+.callout {
+    background: var(--surface, #f4f6fb);
+    border-left: 4px solid var(--accent);
+    border-radius: 0 var(--radius-md) var(--radius-md) 0;
+    padding: 14px 18px;
+    margin: 20px 0;
+    font-size: 13.5px;
+    color: var(--text-muted);
+    line-height: 1.7;
+}
+.callout strong { color: var(--navy); }
+
+.study-tips {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin: 16px 0;
+}
+.tip-card {
+    background: #fff;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 14px 16px;
+}
+.tip-card .tip-num {
+    font-size: 22px;
+    font-weight: 700;
+    font-family: var(--mono);
+    color: #d4ddf7;
+    line-height: 1;
+    margin-bottom: 6px;
+}
+.tip-card .tip-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--navy);
+    margin-bottom: 4px;
+    display: block;
+}
+.tip-card .tip-body {
+    font-size: 12.5px;
+    color: var(--text-muted);
+    line-height: 1.55;
+}
+@media (max-width: 560px) { .study-tips { grid-template-columns: 1fr; } }
+
+.references {
+    border-top: 1px solid var(--border);
+    margin-top: 32px;
+    padding-top: 20px;
+}
+.references h3 {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 12px;
+}
+.references ul { margin: 0; padding-left: 18px; }
+.references li { font-size: 12.5px; color: var(--text-muted); margin-bottom: 6px; font-style: italic; }
+</style>
+
+<!-- HERO -->
+<div class="article-hero">
+    <div class="article-meta">
+        <span class="meta-pill"> Reference</span>
+        <span class="meta-pill">⏱ ~10 min read</span>
+        <span class="meta-pill"> Beginner–Intermediate</span>
+    </div>
+    <h1>Reservoir Engineering Formulas Every Student Should Know</h1>
+    <p class="lead">A compact reference of the most essential reservoir engineering equations — grouped by topic, with clear symbol definitions and notes on when and why each formula matters.</p>
+</div>
+
+<!-- TOPIC NAV -->
+<div class="topic-nav">
+    <div class="topic-nav-label">Jump to section</div>
+    <a href="#storage">1. Fluid Storage</a>
+    <a href="#porosity">2. Porosity &amp; Saturation</a>
+    <a href="#flow">3. Flow Equations</a>
+    <a href="#fvf">4. Formation Volume Factors</a>
+    <a href="#recovery">5. Recovery &amp; Displacement</a>
+    <a href="#mbe">6. Material Balance</a>
+    <a href="#pressure">7. Pressure &amp; Compressibility</a>
+    <a href="#productivity">8. Productivity &amp; Skin</a>
+    <a href="#eor">9. EOR-Specific</a>
+</div>
+
+<div class="article-body">
+
+    <!-- 1 -->
+    <h2 id="storage">1. Fluid Storage — How Much Is There?</h2>
+
+    <div class="formula-card">
+        <div class="formula-card-header">
+            <span class="fc-name">Volumetric OOIP (Oil)</span>
+            <span class="fc-tag">Foundation formula</span>
+        </div>
+        <div class="formula-card-body">
+            <div class="eq-block">
+                N = (7758 &times; A &times; h &times; &phi; &times; (1 &minus; S<sub>wi</sub>)) / B<sub>oi</sub>
+            </div>
+            <table class="sym-table">
+                <thead><tr><th>Symbol</th><th>Description</th><th>Unit</th></tr></thead>
+                <tbody>
+                    <tr><td>7758</td><td>Conversion: bbl per acre-foot</td><td>—</td></tr>
+                    <tr><td>A</td><td>Drainage area</td><td>acres</td></tr>
+                    <tr><td>h</td><td>Net pay thickness</td><td>ft</td></tr>
+                    <tr><td>&phi;</td><td>Porosity</td><td>fraction</td></tr>
+                    <tr><td>S<sub>wi</sub></td><td>Initial water saturation</td><td>fraction</td></tr>
+                    <tr><td>B<sub>oi</sub></td><td>Initial oil FVF</td><td>res bbl/STB</td></tr>
+                    <tr><td>N</td><td>Original Oil in Place</td><td>STB</td></tr>
+                </tbody>
+            </table>
+            <p class="eq-note">Every recovery calculation begins here. Always sanity-check OOIP from both volumetric and material balance methods. <a href="/ooip/" style="color:var(--navy-light);font-weight:500;">Calculate OOIP →</a></p>
+        </div>
+    </div>
+
+    <div class="formula-card">
+        <div class="formula-card-header">
+            <span class="fc-name">Volumetric OGIP (Gas)</span>
+            <span class="fc-tag">Gas reservoirs</span>
+        </div>
+        <div class="formula-card-body">
+            <div class="eq-block">G = (43,560 &times; A &times; h &times; &phi; &times; (1 &minus; S<sub>wi</sub>)) / B<sub>gi</sub></div>
+            <p class="eq-note">43,560 converts acre-ft to ft³. B<sub>gi</sub> is the initial gas formation volume factor in res ft³/SCF.</p>
+        </div>
+    </div>
+
+    <!-- 2 -->
+    <h2 id="porosity">2. Porosity and Saturations</h2>
+
+    <div class="formula-card">
+        <div class="formula-card-header">
+            <span class="fc-name">Archie's Equation — Water Saturation</span>
+            <span class="fc-tag">Petrophysics</span>
+        </div>
+        <div class="formula-card-body">
+            <div class="eq-block">
+                S<sub>w</sub> = [(a &times; R<sub>w</sub>) / (&phi;<sup>m</sup> &times; R<sub>t</sub>)]<sup>1/n</sup>
+            </div>
+            <table class="sym-table">
+                <thead><tr><th>Symbol</th><th>Description</th></tr></thead>
+                <tbody>
+                    <tr><td>a</td><td>Tortuosity factor (≈ 1)</td></tr>
+                    <tr><td>R<sub>w</sub></td><td>Resistivity of formation water (Ω·m)</td></tr>
+                    <tr><td>m</td><td>Cementation exponent (≈ 2)</td></tr>
+                    <tr><td>R<sub>t</sub></td><td>True formation resistivity (Ω·m)</td></tr>
+                    <tr><td>n</td><td>Saturation exponent (≈ 2)</td></tr>
+                </tbody>
+            </table>
+            <p class="eq-note">The most fundamental petrophysical formula. Oil saturation follows as: S<sub>o</sub> = 1 − S<sub>w</sub> − S<sub>g</sub></p>
+        </div>
+    </div>
+
+    <!-- 3 -->
+    <h2 id="flow">3. Fluid Flow Equations</h2>
+
+    <div class="formula-card">
+        <div class="formula-card-header">
+            <span class="fc-name">Darcy's Law — Linear Flow</span>
+            <span class="fc-tag">Foundation formula</span>
+        </div>
+        <div class="formula-card-body">
+            <div class="eq-block">q = (k &times; A &times; &Delta;P) / (&mu; &times; L)</div>
+            <p class="eq-note">Foundation of all reservoir flow calculations. Assumes laminar, single-phase, incompressible flow — know when these break down (turbulence near wellbore, multiphase flow, gas).</p>
+        </div>
+    </div>
+
+    <div class="formula-card">
+        <div class="formula-card-header">
+            <span class="fc-name">Darcy's Law — Radial Steady-State</span>
+            <span class="fc-tag">Well deliverability</span>
+        </div>
+        <div class="formula-card-body">
+            <div class="eq-block">
+                q = (0.00708 &times; k &times; h &times; (P<sub>e</sub> &minus; P<sub>wf</sub>)) / (&mu; &times; B<sub>o</sub> &times; ln(r<sub>e</sub> / r<sub>w</sub>))
+            </div>
+            <p class="eq-note">Field units (md, ft, psi, cp, bbl/d). Used for well deliverability calculations.</p>
+        </div>
+    </div>
+
+    <div class="formula-card">
+        <div class="formula-card-header">
+            <span class="fc-name">Vogel's IPR</span>
+            <span class="fc-tag">Solution gas drive wells</span>
+        </div>
+        <div class="formula-card-body">
+            <div class="eq-block">
+                q / q<sub>max</sub> = 1 &minus; 0.20 &times; (P<sub>wf</sub> / P<sub>r</sub>) &minus; 0.80 &times; (P<sub>wf</sub> / P<sub>r</sub>)<sup>2</sup>
+            </div>
+            <p class="eq-note">Use instead of linear Darcy for solution-gas-drive reservoirs. P<sub>r</sub> = average reservoir pressure; q<sub>max</sub> = absolute open flow potential.</p>
+        </div>
+    </div>
+
+    <!-- 4 -->
+    <h2 id="fvf">4. Formation Volume Factors</h2>
+
+    <div class="formula-card">
+        <div class="formula-card-header">
+            <span class="fc-name">Gas FVF</span>
+            <span class="fc-tag">PVT</span>
+        </div>
+        <div class="formula-card-body">
+            <div class="eq-block">B<sub>g</sub> = 0.00504 &times; (z &times; T) / P &nbsp;&nbsp; [res bbl/SCF]</div>
+            <p class="eq-note">T in °R (= °F + 460); P in psia; z = gas compressibility factor. B<sub>g</sub> converts gas from surface to reservoir conditions.</p>
+        </div>
+    </div>
+
+    <!-- 5 -->
+    <h2 id="recovery">5. Recovery Factor and Displacement Efficiency</h2>
+
+    <div class="formula-card">
+        <div class="formula-card-header">
+            <span class="fc-name">Recovery Factor — Component Form</span>
+            <span class="fc-tag">EOR analysis</span>
+        </div>
+        <div class="formula-card-body">
+            <div class="eq-block">RF = E<sub>v</sub> &times; E<sub>d</sub></div>
+            <p class="eq-note">E<sub>v</sub> = volumetric sweep (fraction contacted); E<sub>d</sub> = displacement efficiency (fraction displaced in contacted zone). Both must be optimised for meaningful EOR gains. <a href="/recovery-factor/" style="color:var(--navy-light);font-weight:500;">Calculate RF →</a></p>
+        </div>
+    </div>
+
+    <div class="formula-card">
+        <div class="formula-card-header">
+            <span class="fc-name">Displacement Efficiency</span>
+            <span class="fc-tag">EOR analysis</span>
+        </div>
+        <div class="formula-card-body">
+            <div class="eq-block">E<sub>d</sub> = (S<sub>oi</sub> &minus; S<sub>or</sub>) / S<sub>oi</sub> = (1 &minus; S<sub>wi</sub> &minus; S<sub>or</sub>) / (1 &minus; S<sub>wi</sub>)</div>
+            <p class="eq-note">Reducing residual oil saturation S<sub>or</sub> is the primary objective of chemical and miscible EOR methods.</p>
+        </div>
+    </div>
+
+    <div class="formula-card">
+        <div class="formula-card-header">
+            <span class="fc-name">Mobility Ratio</span>
+            <span class="fc-tag">Waterflooding</span>
+        </div>
+        <div class="formula-card-body">
+            <div class="eq-block">M = (k<sub>rw</sub> / &mu;<sub>w</sub>) / (k<sub>ro</sub> / &mu;<sub>o</sub>)</div>
+            <p class="eq-note">When M &gt; 1, water fingers through and bypasses oil — sweep efficiency drops. EOR (polymer flooding, etc.) aims to reduce M below 1. <a href="/mobility-ratio/" style="color:var(--navy-light);font-weight:500;">Calculate M →</a></p>
+        </div>
+    </div>
+
+    <!-- 6 -->
+    <h2 id="mbe">6. Material Balance Equations</h2>
+
+    <div class="formula-card">
+        <div class="formula-card-header">
+            <span class="fc-name">Solution Gas Drive MBE</span>
+            <span class="fc-tag">Drive mechanism</span>
+        </div>
+        <div class="formula-card-body">
+            <div class="eq-block">
+                N = F / E<sub>o</sub><br>
+                F = N<sub>p</sub> &times; [B<sub>o</sub> + (R<sub>p</sub> &minus; R<sub>s</sub>) &times; B<sub>g</sub>] + W<sub>p</sub> &times; B<sub>w</sub><br>
+                E<sub>o</sub> = (B<sub>o</sub> &minus; B<sub>oi</sub>) + (R<sub>si</sub> &minus; R<sub>s</sub>) &times; B<sub>g</sub>
+            </div>
+        </div>
+    </div>
+
+    <!-- 7 -->
+    <h2 id="pressure">7. Pressure and Compressibility</h2>
+
+    <div class="formula-card">
+        <div class="formula-card-header">
+            <span class="fc-name">Total Compressibility</span>
+            <span class="fc-tag">Transient analysis</span>
+        </div>
+        <div class="formula-card-body">
+            <div class="eq-block">c<sub>t</sub> = S<sub>o</sub> &times; c<sub>o</sub> + S<sub>w</sub> &times; c<sub>w</sub> + S<sub>g</sub> &times; c<sub>g</sub> + c<sub>f</sub></div>
+            <p class="eq-note">Appears in almost every transient flow and material balance equation. Don't neglect c<sub>f</sub> in tight or overpressured reservoirs.</p>
+        </div>
+    </div>
+
+    <!-- 8 -->
+    <h2 id="productivity">8. Well Productivity and Skin</h2>
+
+    <div class="formula-card">
+        <div class="formula-card-header">
+            <span class="fc-name">Productivity Index</span>
+            <span class="fc-tag">Well performance</span>
+        </div>
+        <div class="formula-card-body">
+            <div class="eq-block">J = q / (P<sub>r</sub> &minus; P<sub>wf</sub>) &nbsp;&nbsp; [STB/d/psi]</div>
+            <p class="eq-note">Combines rock quality, fluid properties, and completion effectiveness into one number. Declining J over time signals damage or depletion.</p>
+        </div>
+    </div>
+
+    <!-- 9 -->
+    <h2 id="eor">9. EOR-Specific Formulas</h2>
+
+    <div class="formula-card">
+        <div class="formula-card-header">
+            <span class="fc-name">Water Fractional Flow (Buckley-Leverett)</span>
+            <span class="fc-tag">Waterflood analysis</span>
+        </div>
+        <div class="formula-card-body">
+            <div class="eq-block">
+                f<sub>w</sub> = 1 / [1 + (k<sub>ro</sub> / k<sub>rw</sub>) &times; (&mu;<sub>w</sub> / &mu;<sub>o</sub>)]
+            </div>
+            <p class="eq-note">Fraction of the flowing stream that is water at any point. Foundation of waterflood analysis. <a href="/fractional-flow/" style="color:var(--navy-light);font-weight:500;">Calculate f<sub>w</sub> →</a></p>
+        </div>
+    </div>
+
+    <div class="formula-card">
+        <div class="formula-card-header">
+            <span class="fc-name">Injection Rate at Breakthrough</span>
+            <span class="fc-tag">Timing</span>
+        </div>
+        <div class="formula-card-body">
+            <div class="eq-block">
+                Q<sub>ibt</sub> = 1 / (df<sub>w</sub> / dS<sub>w</sub>)
+            </div>
+            <p class="eq-note">Reciprocal of the fractional flow curve slope at the flood front — gives pore volumes injected at water breakthrough. <a href="/qibt/" style="color:var(--navy-light);font-weight:500;">Calculate Q<sub>ibt</sub> →</a></p>
+        </div>
+    </div>
+
+    <!-- REFERENCE TABLE -->
+    <h2>Quick Reference Table</h2>
+
+    <table class="ref-table">
+        <thead><tr><th>Formula</th><th>Application</th></tr></thead>
+        <tbody>
+            <tr><td>N = 7758 × A × h × φ × (1 − S<sub>wi</sub>) / B<sub>oi</sub></td><td>Volumetric OOIP</td></tr>
+            <tr><td>RF = N<sub>p</sub> / N</td><td>Recovery factor</td></tr>
+            <tr><td>RF = E<sub>v</sub> × E<sub>d</sub></td><td>Component recovery efficiency</td></tr>
+            <tr><td>E<sub>d</sub> = (S<sub>oi</sub> − S<sub>or</sub>) / S<sub>oi</sub></td><td>Displacement efficiency</td></tr>
+            <tr><td>M = (k<sub>rw</sub>/μ<sub>w</sub>) / (k<sub>ro</sub>/μ<sub>o</sub>)</td><td>Mobility ratio</td></tr>
+            <tr><td>q = kA ΔP / μL</td><td>Darcy's law (linear)</td></tr>
+            <tr><td>N = F / E<sub>o</sub></td><td>Material balance (solution gas drive)</td></tr>
+            <tr><td>B<sub>g</sub> = 0.00504 × zT/P</td><td>Gas FVF</td></tr>
+            <tr><td>J = q / (P<sub>r</sub> − P<sub>wf</sub>)</td><td>Productivity index</td></tr>
+            <tr><td>f<sub>w</sub> = 1 / [1 + (k<sub>ro</sub>/k<sub>rw</sub>)(μ<sub>w</sub>/μ<sub>o</sub>)]</td><td>Fractional flow</td></tr>
+        </tbody>
+    </table>
+
+    <h2>Study Tips</h2>
+
+    <div class="study-tips">
+        <div class="tip-card">
+            <div class="tip-num">01</div>
+            <span class="tip-title">Understand units before memorising formulas</span>
+            <span class="tip-body">Many errors come from mixing field and SI units. Know which unit system each form of an equation uses.</span>
+        </div>
+        <div class="tip-card">
+            <div class="tip-num">02</div>
+            <span class="tip-title">Know what each term physically represents</span>
+            <span class="tip-body">B<sub>o</sub> isn't just a number — it tells you how much the oil shrinks when it reaches the surface. Physics makes the maths stick.</span>
+        </div>
+        <div class="tip-card">
+            <div class="tip-num">03</div>
+            <span class="tip-title">Practice on real data sets</span>
+            <span class="tip-body">SPE comparative solution problems are publicly available and provide excellent real-reservoir data for material balance and flow calculations.</span>
+        </div>
+        <div class="tip-card">
+            <div class="tip-num">04</div>
+            <span class="tip-title">Learn to spot limiting assumptions</span>
+            <span class="tip-body">Darcy's law assumes laminar flow and incompressible fluid. Know when those assumptions break down near the wellbore or in multiphase systems.</span>
+        </div>
+    </div>
+
+    <div class="references">
+        <h3>Further Reading</h3>
+        <ul>
+            <li>Ahmed, T. — <em>Reservoir Engineering Handbook</em></li>
+            <li>Dake, L.P. — <em>The Practice of Reservoir Engineering</em></li>
+            <li>Tarek Ahmed — <em>Fluid Flow in Porous Media</em> (SPE Textbook Vol. 2)</li>
+            <li>Buckley, S.E. and Leverett, M.C. — <em>Mechanism of Fluid Displacement in Sands</em> (1942)</li>
+        </ul>
+    </div>
+
+</div>
+
+<a href="/" class="back">&#8592; Back to Dashboard</a>
+
+{% endblock %}

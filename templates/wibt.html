@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block title %}Water Injected at Breakthrough (WIBT) — EOR Solver{% endblock %}
+{% block title %}Water Injected at Breakthrough (Wibt) — EOR Solver{% endblock %}
 {% block content %}
 
 <style>
@@ -15,8 +15,104 @@
     line-height: 1.6;
 }
 
-/* ── MODEL FORMULA TABS ── */
-.formula-tabs {
+.model-tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 24px;
+}
+.model-tab {
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: var(--transition);
+    background: #fafbfe;
+    text-align: left;
+}
+.model-tab:hover {
+    border-color: var(--navy-light);
+    background: #f0f4ff;
+}
+.model-tab.active {
+    border-color: var(--navy-light);
+    background: #eef2ff;
+    box-shadow: 0 0 0 3px rgba(26,82,184,0.08);
+}
+.model-tab .mt-number {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    display: block;
+    margin-bottom: 4px;
+}
+.model-tab .mt-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--navy);
+    display: block;
+    margin-bottom: 2px;
+}
+.model-tab .mt-formula {
+    font-size: 11px;
+    font-family: var(--mono);
+    color: var(--text-muted);
+}
+.model-tab.active .mt-number { color: var(--navy-light); }
+
+.formula-block {
+    background: #f0f4ff;
+    border: 1px solid #d4ddf7;
+    border-radius: var(--radius-md);
+    padding: 14px 20px;
+    margin-bottom: 16px;
+    font-family: var(--mono);
+    font-size: 15px;
+    color: var(--navy-mid);
+    text-align: center;
+    transition: var(--transition);
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.formula-block:hover {
+    border-color: var(--navy-light);
+    background: #e8eeff;
+}
+
+.formula-legend {
+    display: grid;
+    gap: 1px;
+    background: #d4ddf7;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    margin-bottom: 24px;
+}
+.formula-legend.cols-1 { grid-template-columns: 1fr; }
+.formula-legend.cols-2 { grid-template-columns: 1fr 1fr; }
+.fl-cell {
+    background: #f8faff;
+    padding: 8px 12px;
+}
+.fl-cell .fl-sym {
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--navy-mid);
+    display: block;
+    margin-bottom: 2px;
+}
+.fl-cell .fl-desc {
+    font-family: var(--sans);
+    font-size: 11px;
+    color: var(--text-muted);
+    line-height: 1.4;
+}
+
+.info-strip {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 1px;
@@ -24,99 +120,27 @@
     border: 1px solid var(--border);
     border-radius: var(--radius-md);
     overflow: hidden;
-    margin-bottom: 16px;
+    margin-bottom: 24px;
 }
-.formula-tab {
-    background: #f0f4ff;
-    padding: 14px 16px;
+.info-cell {
+    background: #fafbfe;
+    padding: 12px 14px;
     text-align: center;
-    transition: var(--transition);
 }
-.formula-tab.active {
-    background: #e8eeff;
-}
-.formula-tab .ft-label {
+.info-cell .ic-label {
     font-size: 11px;
-    font-weight: 600;
+    color: var(--text-dim);
     text-transform: uppercase;
     letter-spacing: 0.6px;
-    color: var(--text-dim);
-    margin-bottom: 6px;
-    display: block;
-}
-.formula-tab .ft-formula {
-    font-family: var(--mono);
-    font-size: 14px;
-    color: var(--navy-mid);
-}
-
-.legend-box {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    padding: 14px 18px;
-    margin-bottom: 24px;
-    font-size: 13px;
-    color: var(--text-muted);
-}
-.legend-row {
-    display: flex;
-    gap: 8px;
-    padding: 4px 0;
-}
-.legend-row .lg-term {
-    font-family: var(--mono);
     font-weight: 600;
-    color: var(--navy);
-    min-width: 50px;
-    flex-shrink: 0;
-}
-
-/* ── MODEL SELECTOR (pill toggle) ── */
-.model-select-label {
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.8px;
-    text-transform: uppercase;
-    color: var(--text-dim);
-    margin-bottom: 8px;
     display: block;
+    margin-bottom: 3px;
 }
-.model-pills {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    margin-bottom: 20px;
-}
-.model-pill {
-    border: 1.5px solid var(--border);
-    border-radius: var(--radius-md);
-    padding: 12px 14px;
-    cursor: pointer;
-    transition: var(--transition);
-    background: #fafbfe;
-    text-align: center;
-}
-.model-pill:hover {
-    border-color: var(--navy-light);
-}
-.model-pill.selected {
-    border-color: var(--navy-light);
-    background: var(--accent-dim);
-}
-.model-pill .mp-title {
+.info-cell .ic-val {
     font-size: 13px;
     font-weight: 600;
     color: var(--text-main);
-    margin-bottom: 2px;
-}
-.model-pill .mp-sub {
-    font-size: 11px;
-    color: var(--text-muted);
     font-family: var(--mono);
-}
-@media (max-width: 560px) {
-    .model-pills { grid-template-columns: 1fr; }
 }
 
 .input-grid {
@@ -126,6 +150,9 @@
 }
 @media (max-width: 560px) {
     .input-grid { grid-template-columns: 1fr; }
+    .model-tabs { grid-template-columns: 1fr; }
+    .info-strip { grid-template-columns: 1fr; }
+    .formula-legend.cols-2 { grid-template-columns: 1fr; }
 }
 
 .input-section-label {
@@ -144,11 +171,11 @@
     margin-top: 0;
 }
 
-.input-wrap {
-    position: relative;
-}
+.input-full { grid-column: 1 / -1; }
+
+.input-wrap { position: relative; }
 .input-wrap input {
-    padding-right: 60px;
+    padding-right: 64px;
     margin-bottom: 18px;
 }
 .input-suffix {
@@ -161,18 +188,6 @@
     color: var(--text-dim);
     pointer-events: none;
     font-family: var(--mono);
-}
-
-.model-fields {
-    display: none;
-}
-.model-fields.active {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0 20px;
-}
-@media (max-width: 560px) {
-    .model-fields.active { grid-template-columns: 1fr; }
 }
 
 .result-card {
@@ -222,7 +237,7 @@
 
 .metrics-row {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
     gap: 10px;
     margin-bottom: 16px;
 }
@@ -242,7 +257,7 @@
     margin-bottom: 4px;
 }
 .metric-block .mb-val {
-    font-size: 20px;
+    font-size: 18px;
     font-weight: 700;
     font-family: var(--mono);
     color: var(--navy);
@@ -252,8 +267,17 @@
     color: var(--text-muted);
     margin-top: 2px;
 }
-@media (max-width: 480px) {
-    .metrics-row { grid-template-columns: 1fr; }
+
+.equation-trace {
+    background: #f0f4ff;
+    border: 1px solid #d4ddf7;
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--navy-mid);
+    margin-bottom: 16px;
+    line-height: 2;
 }
 
 .interpretation-box {
@@ -265,59 +289,77 @@
     line-height: 1.65;
     border-left: 3px solid var(--accent);
 }
-
-.status-pill {
-    display: inline-block;
-    font-size: 11px;
-    font-weight: 700;
-    padding: 3px 10px;
-    border-radius: 20px;
-    letter-spacing: 0.3px;
-    margin-bottom: 12px;
-}
-.status-unit { background: rgba(26,82,184,0.10); color: var(--navy-mid); }
 </style>
 
 <!-- PAGE HEADER -->
 <div class="page-header">
-    <span class="badge">Recovery & Timing</span>
-    <h1>Water Injected at Breakthrough <span style="font-size:15px; color:var(--text-muted); font-weight:400;">(W<sub>ibt</sub>)</span></h1>
+    <span class="badge">Recovery &amp; Timing</span>
+    <h1>Water Injected at Breakthrough <span style="font-size:15px;color:var(--text-muted);font-weight:400;">(W<sub>ibt</sub>)</span></h1>
     <p>Cumulative volume of water injected into the reservoir at the moment water breakthrough occurs at the producing well.</p>
 </div>
 
-<!-- FORMULA TABS -->
-<div class="formula-tabs">
-    <div class="formula-tab" id="tabSat">
-        <span class="ft-label">Model 1 — Saturation</span>
-        <span class="ft-formula">W<sub>ibt</sub> = PV &times; (S<sub>wf</sub> &minus; S<sub>wi</sub>)</span>
+<!-- MODEL SELECTOR TABS -->
+<div class="model-tabs" id="modelTabs">
+    <div class="model-tab active" data-model="sat" onclick="selectModel('sat')">
+        <span class="mt-number">Model 1</span>
+        <span class="mt-name">Saturation Model</span>
+        <span class="mt-formula">W<sub>ibt</sub> = PV &times; (S<sub>wf</sub> &minus; S<sub>wi</sub>)</span>
     </div>
-    <div class="formula-tab" id="tabInj">
-        <span class="ft-label">Model 2 — Injection</span>
-        <span class="ft-formula">W<sub>ibt</sub> = PV &times; Q<sub>ibt</sub></span>
+    <div class="model-tab" data-model="inj" onclick="selectModel('inj')">
+        <span class="mt-number">Model 2</span>
+        <span class="mt-name">Injection Model</span>
+        <span class="mt-formula">W<sub>ibt</sub> = PV &times; Q<sub>ibt</sub></span>
     </div>
 </div>
 
-<!-- LEGEND -->
-<div class="legend-box">
-    <div class="legend-row"><span class="lg-term">PV</span><span>Pore Volume</span></div>
-    <div class="legend-row"><span class="lg-term">S<sub>wf</sub></span><span>Final water saturation at breakthrough</span></div>
-    <div class="legend-row"><span class="lg-term">S<sub>wi</sub></span><span>Initial water saturation</span></div>
-    <div class="legend-row"><span class="lg-term">Q<sub>ibt</sub></span><span>Injection rate at breakthrough</span></div>
+<!-- ACTIVE FORMULA DISPLAY -->
+<div class="formula-block" id="formulaDisplay">
+    W<sub>ibt</sub> = PV &times; (S<sub>wf</sub> &minus; S<sub>wi</sub>)
+</div>
+
+<!-- LEGEND (swaps with model) -->
+<div class="formula-legend cols-2" id="legendSat">
+    <div class="fl-cell">
+        <span class="fl-sym">PV</span>
+        <span class="fl-desc">Pore volume of the reservoir (bbl)</span>
+    </div>
+    <div class="fl-cell">
+        <span class="fl-sym">S<sub>wf</sub> &minus; S<sub>wi</sub></span>
+        <span class="fl-desc">Change in water saturation from initial to flood-front conditions (fraction)</span>
+    </div>
+</div>
+
+<div class="formula-legend cols-2" id="legendInj" style="display:none;">
+    <div class="fl-cell">
+        <span class="fl-sym">PV</span>
+        <span class="fl-desc">Pore volume of the reservoir (bbl)</span>
+    </div>
+    <div class="fl-cell">
+        <span class="fl-sym">Q<sub>ibt</sub></span>
+        <span class="fl-desc">Injection rate (pore volumes) at breakthrough (fraction)</span>
+    </div>
+</div>
+
+<!-- CONTEXT STRIP -->
+<div class="info-strip">
+    <div class="info-cell" id="stripLeft">
+        <span class="ic-label">Input</span>
+        <span class="ic-val">PV, S<sub>wf</sub> &amp; S<sub>wi</sub></span>
+    </div>
+    <div class="info-cell">
+        <span class="ic-label">Output</span>
+        <span class="ic-val">W<sub>ibt</sub> (bbl)</span>
+    </div>
 </div>
 
 <!-- FORM -->
 <form method="POST">
     {% csrf_token %}
+    <input type="hidden" name="model" id="modelInput" value="sat">
 
-    <span class="model-select-label">Select Model</span>
-    <select name="model" id="model" onchange="toggleInputs()" required style="margin-bottom: 20px;">
-        <option value="">-- Select --</option>
-        <option value="sat">Saturation Model</option>
-        <option value="inj">Injection Model</option>
-    </select>
-
-    <div class="input-section-label">Reservoir Parameter</div>
+    <!-- SHARED: Pore Volume -->
     <div class="input-grid">
+        <div class="input-section-label">Reservoir Parameter</div>
         <div>
             <label for="PV">Pore Volume &mdash; PV</label>
             <div class="input-wrap">
@@ -328,33 +370,40 @@
         </div>
     </div>
 
-    <!-- MODEL 1 -->
-    <div id="satModel" class="model-fields">
-        <div class="input-section-label" style="grid-column: 1 / -1;">Saturation Inputs</div>
-        <div>
-            <label for="Swf">Final Water Saturation &mdash; S<sub>wf</sub></label>
-            <div class="input-wrap">
-                <input type="number" step="any" name="Swf" id="Swf" placeholder="e.g. 0.65">
-                <span class="input-suffix">frac</span>
+    <!-- MODEL 1: Saturation -->
+    <div id="satPanel">
+        <div class="input-grid">
+            <div class="input-section-label">Saturation Inputs</div>
+            <div>
+                <label for="Swf">Final Water Saturation &mdash; S<sub>wf</sub></label>
+                <div class="input-wrap">
+                    <input type="number" step="any" name="Swf" id="Swf"
+                           placeholder="e.g. 0.65">
+                    <span class="input-suffix">frac</span>
+                </div>
             </div>
-        </div>
-        <div>
-            <label for="Swi">Initial Water Saturation &mdash; S<sub>wi</sub></label>
-            <div class="input-wrap">
-                <input type="number" step="any" name="Swi" id="Swi" placeholder="e.g. 0.20">
-                <span class="input-suffix">frac</span>
+            <div>
+                <label for="Swi">Initial Water Saturation &mdash; S<sub>wi</sub></label>
+                <div class="input-wrap">
+                    <input type="number" step="any" name="Swi" id="Swi"
+                           placeholder="e.g. 0.20">
+                    <span class="input-suffix">frac</span>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- MODEL 2 -->
-    <div id="injModel" class="model-fields">
-        <div class="input-section-label" style="grid-column: 1 / -1;">Injection Inputs</div>
-        <div>
-            <label for="Qibt">Injection Rate at Breakthrough &mdash; Q<sub>ibt</sub></label>
-            <div class="input-wrap">
-                <input type="number" step="any" name="Qibt" id="Qibt" placeholder="e.g. 0.85">
-                <span class="input-suffix">frac</span>
+    <!-- MODEL 2: Injection -->
+    <div id="injPanel" style="display:none;">
+        <div class="input-grid">
+            <div class="input-section-label">Injection Inputs</div>
+            <div>
+                <label for="Qibt">Injection Rate at Breakthrough &mdash; Q<sub>ibt</sub></label>
+                <div class="input-wrap">
+                    <input type="number" step="any" name="Qibt" id="Qibt"
+                           placeholder="e.g. 0.85">
+                    <span class="input-suffix">frac</span>
+                </div>
             </div>
         </div>
     </div>
@@ -366,33 +415,65 @@
 {% if result is not None %}
 
 <div class="result-card">
-
     <div class="result-card-header">
         <span>Result</span>
-        <span>Water Injected at Breakthrough</span>
+        <span>Water Injected at Breakthrough &mdash; W<sub style="color:rgba(255,255,255,0.55)">ibt</sub></span>
     </div>
-
     <div class="result-card-body">
-
-        <span class="status-pill status-unit">Calculated &mdash; W<sub>ibt</sub></span>
 
         <div class="result-value-row">
             <span class="val">{{ result|floatformat:2 }}</span>
             <span class="unit">bbl</span>
         </div>
 
+        {% if model == 'sat' %}
         <div class="metrics-row">
             <div class="metric-block">
-                <span class="mb-label">Pore Volume</span>
+                <span class="mb-label">PV</span>
                 <span class="mb-val">{{ PV|floatformat:2 }}</span>
                 <div class="mb-sub">bbl</div>
             </div>
             <div class="metric-block">
-                <span class="mb-label">Model Used</span>
-                <span class="mb-val" style="font-size:14px;">{{ model|default:"—" }}</span>
-                <div class="mb-sub">selected calculation method</div>
+                <span class="mb-label">S<sub>wf</sub></span>
+                <span class="mb-val">{{ Swf|floatformat:4 }}</span>
+                <div class="mb-sub">fraction</div>
+            </div>
+            <div class="metric-block">
+                <span class="mb-label">S<sub>wi</sub></span>
+                <span class="mb-val">{{ Swi|floatformat:4 }}</span>
+                <div class="mb-sub">fraction</div>
             </div>
         </div>
+        <div class="equation-trace">
+            W<sub>ibt</sub> = PV &times; (S<sub>wf</sub> &minus; S<sub>wi</sub>)<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= {{ PV|floatformat:2 }} &times; ({{ Swf|floatformat:4 }} &minus; {{ Swi|floatformat:4 }})<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= <strong>{{ result|floatformat:2 }} bbl</strong>
+        </div>
+
+        {% elif model == 'inj' %}
+        <div class="metrics-row">
+            <div class="metric-block">
+                <span class="mb-label">PV</span>
+                <span class="mb-val">{{ PV|floatformat:2 }}</span>
+                <div class="mb-sub">bbl</div>
+            </div>
+            <div class="metric-block">
+                <span class="mb-label">Q<sub>ibt</sub></span>
+                <span class="mb-val">{{ Qibt|floatformat:4 }}</span>
+                <div class="mb-sub">pore volumes</div>
+            </div>
+            <div class="metric-block">
+                <span class="mb-label">W<sub>ibt</sub></span>
+                <span class="mb-val">{{ result|floatformat:2 }}</span>
+                <div class="mb-sub">bbl</div>
+            </div>
+        </div>
+        <div class="equation-trace">
+            W<sub>ibt</sub> = PV &times; Q<sub>ibt</sub><br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= {{ PV|floatformat:2 }} &times; {{ Qibt|floatformat:4 }}<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= <strong>{{ result|floatformat:2 }} bbl</strong>
+        </div>
+        {% endif %}
 
         {% if interpretation %}
         <div class="interpretation-box">{{ interpretation }}</div>
@@ -406,18 +487,34 @@
 <a href="/" class="back">&#8592; Back to Dashboard</a>
 
 <script>
-function toggleInputs(){
-    let model = document.getElementById("model").value;
+function selectModel(model) {
+    document.getElementById('modelInput').value = model;
 
-    document.getElementById("satModel").classList.toggle("active", model === "sat");
-    document.getElementById("injModel").classList.toggle("active", model === "inj");
+    document.querySelectorAll('.model-tab').forEach(t => t.classList.remove('active'));
+    document.querySelector('[data-model="' + model + '"]').classList.add('active');
 
-    document.getElementById("tabSat").classList.toggle("active", model === "sat");
-    document.getElementById("tabInj").classList.toggle("active", model === "inj");
+    var isSat = model === 'sat';
+
+    document.getElementById('satPanel').style.display = isSat ? 'block' : 'none';
+    document.getElementById('injPanel').style.display  = isSat ? 'none'  : 'block';
+
+    document.getElementById('legendSat').style.display = isSat ? 'grid' : 'none';
+    document.getElementById('legendInj').style.display = isSat ? 'none' : 'grid';
+
+    document.getElementById('formulaDisplay').innerHTML = isSat
+        ? 'W<sub>ibt</sub> = PV &times; (S<sub>wf</sub> &minus; S<sub>wi</sub>)'
+        : 'W<sub>ibt</sub> = PV &times; Q<sub>ibt</sub>';
+
+    document.getElementById('stripLeft').innerHTML =
+        '<span class="ic-label">Input</span>' +
+        '<span class="ic-val">' + (isSat
+            ? 'PV, S<sub>wf</sub> &amp; S<sub>wi</sub>'
+            : 'PV &amp; Q<sub>ibt</sub>') + '</span>';
 }
 
 window.addEventListener('DOMContentLoaded', function () {
-    toggleInputs();
+    var saved = '{{ model|default:"sat" }}';
+    if (saved) selectModel(saved);
 });
 </script>
 
