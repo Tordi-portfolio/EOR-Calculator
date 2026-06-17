@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Water Injected at Breakthrough (Wibt)
+{% endblock %}
+
+{% block content %}
+
+<div class="container">
+
+    <h1>Water Injected at Breakthrough</h1>
+
+    <div class="formula">
+
+        <h3>Model 1: Saturation-Based</h3>
+
+        W<sub>ibt</sub> = PV × (S<sub>wf</sub> − S<sub>wi</sub>)
+
+        <hr>
+
+        <h3>Model 2: Injection-Based</h3>
+
+        W<sub>ibt</sub> = PV × Q<sub>ibt</sub>
+
+        <hr>
+
+        <p><strong>Where:</strong></p>
+
+        <p>PV = Pore Volume</p>
+        <p>Swf = Final Water Saturation at Breakthrough</p>
+        <p>Swi = Initial Water Saturation</p>
+        <p>Qibt = Injection Rate at Breakthrough</p>
+
+    </div>
+
+    <!-- FORM -->
+    <form method="POST">
+        {% csrf_token %}
+
+        <label>Select Model</label>
+        <select name="model" id="model" onchange="toggleInputs()" required>
+            <option value="">-- Select --</option>
+            <option value="sat">Saturation Model</option>
+            <option value="inj">Injection Model</option>
+        </select>
+
+        <hr>
+
+        <label>Pore Volume (PV)</label>
+        <input type="number" step="any" name="PV" required>
+
+        <!-- MODEL 1 -->
+        <div id="satModel" style="display:none;">
+            <label>Final Water Saturation (Swf)</label>
+            <input type="number" step="any" name="Swf">
+
+            <label>Initial Water Saturation (Swi)</label>
+            <input type="number" step="any" name="Swi">
+        </div>
+
+        <!-- MODEL 2 -->
+        <div id="injModel" style="display:none;">
+            <label>Injection Rate at Breakthrough (Qibt)</label>
+            <input type="number" step="any" name="Qibt">
+        </div>
+
+        <button type="submit">Calculate Wibt</button>
+    </form>
+
+    {% if result is not None %}
+    <div class="result">
+        <h3>Wibt = {{ result|floatformat:2 }}</h3>
+        <p>{{ interpretation }}</p>
+    </div>
+    {% endif %}
+
+    <a class="back" href="/">← Back to Dashboard</a>
+
+</div>
+
+<script>
+function toggleInputs(){
+    let model = document.getElementById("model").value;
+
+    document.getElementById("satModel").style.display = (model === "sat") ? "block" : "none";
+    document.getElementById("injModel").style.display = (model === "inj") ? "block" : "none";
+}
+</script>
+
+{% endblock %}

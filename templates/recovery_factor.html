@@ -1,0 +1,459 @@
+{% extends 'base.html' %}
+{% block title %}Recovery Factor — EOR Solver{% endblock %}
+{% block content %}
+
+<style>
+.page-header {
+    text-align: center;
+    margin-bottom: 28px;
+}
+.page-header p {
+    font-size: 14px;
+    color: var(--text-muted);
+    max-width: 500px;
+    margin: 8px auto 0;
+    line-height: 1.6;
+}
+
+.input-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 20px;
+}
+@media (max-width: 560px) {
+    .input-grid { grid-template-columns: 1fr; }
+}
+
+.input-section-label {
+    grid-column: 1 / -1;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    padding: 4px 0 8px;
+    border-top: 1px solid var(--border);
+    margin-top: 4px;
+}
+.input-section-label:first-child {
+    border-top: none;
+    margin-top: 0;
+}
+
+.input-wrap { position: relative; }
+.input-wrap input {
+    padding-right: 64px;
+    margin-bottom: 18px;
+}
+.input-suffix {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-60%);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-dim);
+    pointer-events: none;
+    font-family: var(--mono);
+}
+
+.formula-block {
+    background: #f0f4ff;
+    border: 1px solid #d4ddf7;
+    border-radius: var(--radius-md);
+    padding: 14px 20px;
+    margin-bottom: 16px;
+    font-family: var(--mono);
+    font-size: 15px;
+    color: var(--navy-mid);
+    text-align: center;
+    transition: var(--transition);
+}
+.formula-block:hover {
+    border-color: var(--navy-light);
+    background: #e8eeff;
+}
+
+.formula-legend {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1px;
+    background: #d4ddf7;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    margin-bottom: 24px;
+}
+.fl-cell {
+    background: #f8faff;
+    padding: 8px 12px;
+}
+.fl-cell .fl-sym {
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--navy-mid);
+    display: block;
+    margin-bottom: 2px;
+}
+.fl-cell .fl-desc {
+    font-family: var(--sans);
+    font-size: 11px;
+    color: var(--text-muted);
+    line-height: 1.4;
+}
+@media (max-width: 480px) {
+    .formula-legend { grid-template-columns: 1fr; }
+}
+
+.info-strip {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    margin-bottom: 24px;
+}
+.info-cell {
+    background: #fafbfe;
+    padding: 12px 14px;
+    text-align: center;
+}
+.info-cell .ic-label {
+    font-size: 11px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    font-weight: 600;
+    display: block;
+    margin-bottom: 3px;
+}
+.info-cell .ic-val {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-main);
+    font-family: var(--mono);
+}
+@media (max-width: 480px) {
+    .info-strip { grid-template-columns: 1fr; }
+}
+
+.result-card {
+    margin-top: 24px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    animation: slideUp 0.35s ease both;
+}
+.result-card-header {
+    background: var(--navy);
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.result-card-header span {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.55);
+}
+.result-card-body {
+    padding: 22px 24px;
+    background: #fff;
+}
+.result-value-row {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+.result-value-row .val {
+    font-size: 44px;
+    font-weight: 700;
+    color: var(--navy);
+    line-height: 1;
+    font-family: var(--mono);
+    letter-spacing: -1px;
+}
+.result-value-row .unit {
+    font-size: 16px;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.metrics-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+.metric-block {
+    background: var(--surface, #f4f6fb);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+}
+.metric-block .mb-label {
+    font-size: 11px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+    display: block;
+    margin-bottom: 4px;
+}
+.metric-block .mb-val {
+    font-size: 18px;
+    font-weight: 700;
+    font-family: var(--mono);
+    color: var(--navy);
+}
+.metric-block .mb-sub {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+@media (max-width: 480px) {
+    .metrics-row { grid-template-columns: 1fr; }
+}
+
+.gauge-wrap { margin-bottom: 16px; }
+.gauge-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-bottom: 5px;
+    font-family: var(--mono);
+}
+.gauge-track {
+    height: 8px;
+    background: #edf0f7;
+    border-radius: 20px;
+    overflow: hidden;
+}
+.gauge-fill {
+    height: 100%;
+    border-radius: 20px;
+    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.status-pill {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+    letter-spacing: 0.3px;
+    margin-bottom: 12px;
+}
+.status-poor     { background: rgba(239,68,68,0.12);   color: #b91c1c; }
+.status-moderate { background: rgba(245,158,11,0.12);  color: #92400e; }
+.status-good     { background: rgba(0,194,168,0.12);   color: #007a6b; }
+.status-high     { background: rgba(26,82,184,0.10);   color: var(--navy-mid); }
+
+.equation-trace {
+    background: #f0f4ff;
+    border: 1px solid #d4ddf7;
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--navy-mid);
+    margin-bottom: 16px;
+    line-height: 2;
+}
+
+.interpretation-box {
+    background: var(--surface, #f4f6fb);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.65;
+    border-left: 3px solid var(--accent);
+}
+</style>
+
+<!-- PAGE HEADER -->
+<div class="page-header">
+    <span class="badge">Recovery &amp; Timing</span>
+    <h1>Recovery Factor <span style="font-size:15px;color:var(--text-muted);font-weight:400;">(RF)</span></h1>
+    <p>Percentage of the original oil in place that has been produced, a key indicator of reservoir and flood performance.</p>
+</div>
+
+<!-- FORMULA -->
+<div class="formula-block">
+    RF = (N<sub>p</sub> / N) &times; 100
+</div>
+
+<!-- LEGEND -->
+<div class="formula-legend">
+    <div class="fl-cell">
+        <span class="fl-sym">N<sub>p</sub></span>
+        <span class="fl-desc">Cumulative oil production (STB)</span>
+    </div>
+    <div class="fl-cell">
+        <span class="fl-sym">N</span>
+        <span class="fl-desc">Original oil in place — STOIIP (STB)</span>
+    </div>
+    <div class="fl-cell">
+        <span class="fl-sym">RF</span>
+        <span class="fl-desc">Recovery factor (%)</span>
+    </div>
+</div>
+
+<!-- CONTEXT STRIP -->
+<div class="info-strip">
+    <div class="info-cell">
+        <span class="ic-label">Poor</span>
+        <span class="ic-val">RF &lt; 20%</span>
+    </div>
+    <div class="info-cell">
+        <span class="ic-label">Moderate</span>
+        <span class="ic-val">20 – 40%</span>
+    </div>
+    <div class="info-cell">
+        <span class="ic-label">Good</span>
+        <span class="ic-val">RF &gt; 40%</span>
+    </div>
+</div>
+
+<!-- FORM -->
+<form method="POST">
+    {% csrf_token %}
+
+    <div class="input-grid">
+
+        <div class="input-section-label">Production &amp; Reserves</div>
+
+        <div>
+            <label for="Np">Cumulative Oil Production &mdash; N<sub>p</sub></label>
+            <div class="input-wrap">
+                <input type="number" step="any" name="Np" id="Np"
+                       placeholder="e.g. 5000000" required>
+                <span class="input-suffix">STB</span>
+            </div>
+        </div>
+
+        <div>
+            <label for="N">Original Oil in Place &mdash; N</label>
+            <div class="input-wrap">
+                <input type="number" step="any" name="N" id="N"
+                       placeholder="e.g. 20000000" required>
+                <span class="input-suffix">STB</span>
+            </div>
+        </div>
+
+    </div>
+
+    <button type="submit">Calculate Recovery Factor</button>
+</form>
+
+<!-- RESULT -->
+{% if result is not None %}
+
+<div class="result-card">
+    <div class="result-card-header">
+        <span>Result</span>
+        <span>Recovery Factor &mdash; RF</span>
+    </div>
+    <div class="result-card-body">
+
+        <!-- status pill set by JS -->
+        <span class="status-pill" id="statusPill"></span>
+
+        <div class="result-value-row">
+            <span class="val">{{ result|floatformat:2 }}</span>
+            <span class="unit">%</span>
+        </div>
+
+        <div class="metrics-row">
+            <div class="metric-block">
+                <span class="mb-label">Cumulative N<sub>p</sub></span>
+                <span class="mb-val">{{ Np|floatformat:0 }}</span>
+                <div class="mb-sub">STB produced</div>
+            </div>
+            <div class="metric-block">
+                <span class="mb-label">OOIP &mdash; N</span>
+                <span class="mb-val">{{ N|floatformat:0 }}</span>
+                <div class="mb-sub">STB in place</div>
+            </div>
+            <div class="metric-block">
+                <span class="mb-label">Remaining oil</span>
+                <span class="mb-val" id="remainingVal">—</span>
+                <div class="mb-sub">STB unrecovered</div>
+            </div>
+        </div>
+
+        <!-- RF gauge 0–100% -->
+        <div class="gauge-wrap">
+            <div class="gauge-labels">
+                <span>0%</span>
+                <span>25%</span>
+                <span>50%</span>
+                <span>75%</span>
+                <span>100%</span>
+            </div>
+            <div class="gauge-track">
+                <div class="gauge-fill" id="gauge" style="width:0%;"></div>
+            </div>
+        </div>
+
+        <div class="equation-trace">
+            RF = (N<sub>p</sub> / N) &times; 100<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;= ({{ Np|floatformat:0 }} / {{ N|floatformat:0 }}) &times; 100<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;= <strong>{{ result|floatformat:2 }}%</strong>
+        </div>
+
+        {% if interpretation %}
+        <div class="interpretation-box">{{ interpretation }}</div>
+        {% endif %}
+
+    </div>
+</div>
+
+<script>
+window.addEventListener('DOMContentLoaded', function () {
+    var rf  = {{ result }};
+    var Np  = {{ Np }};
+    var N   = {{ N }};
+
+    /* gauge */
+    var pct = Math.min(Math.max(rf, 0), 100);
+    var color = rf < 20 ? '#ef4444' : rf < 40 ? '#f59e0b' : 'var(--accent)';
+    var g = document.getElementById('gauge');
+    g.style.width      = pct.toFixed(1) + '%';
+    g.style.background = color;
+
+    /* remaining oil */
+    var remaining = Math.max(N - Np, 0);
+    document.getElementById('remainingVal').textContent =
+        remaining.toLocaleString(undefined, { maximumFractionDigits: 0 });
+
+    /* status pill */
+    var pill = document.getElementById('statusPill');
+    if (rf < 20) {
+        pill.className = 'status-pill status-poor';
+        pill.textContent = '⚠ Poor Recovery';
+    } else if (rf < 40) {
+        pill.className = 'status-pill status-moderate';
+        pill.textContent = '◑ Moderate Recovery';
+    } else if (rf < 60) {
+        pill.className = 'status-pill status-good';
+        pill.textContent = '✓ Good Recovery';
+    } else {
+        pill.className = 'status-pill status-high';
+        pill.textContent = '★ High Recovery';
+    }
+});
+</script>
+
+{% endif %}
+
+<a href="/" class="back">&#8592; Back to Dashboard</a>
+
+{% endblock %}

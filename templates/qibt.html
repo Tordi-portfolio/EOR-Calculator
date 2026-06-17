@@ -1,0 +1,497 @@
+{% extends 'base.html' %}
+{% block title %}Injection Rate at Breakthrough (Qibt) — EOR Solver{% endblock %}
+{% block content %}
+
+<style>
+.page-header {
+    text-align: center;
+    margin-bottom: 28px;
+}
+.page-header p {
+    font-size: 14px;
+    color: var(--text-muted);
+    max-width: 500px;
+    margin: 8px auto 0;
+    line-height: 1.6;
+}
+
+.model-tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 24px;
+}
+.model-tab {
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: var(--transition);
+    background: #fafbfe;
+    text-align: left;
+}
+.model-tab:hover {
+    border-color: var(--navy-light);
+    background: #f0f4ff;
+}
+.model-tab.active {
+    border-color: var(--navy-light);
+    background: #eef2ff;
+    box-shadow: 0 0 0 3px rgba(26,82,184,0.08);
+}
+.model-tab .mt-number {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    display: block;
+    margin-bottom: 4px;
+}
+.model-tab .mt-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--navy);
+    display: block;
+    margin-bottom: 2px;
+}
+.model-tab .mt-formula {
+    font-size: 11px;
+    font-family: var(--mono);
+    color: var(--text-muted);
+}
+.model-tab.active .mt-number { color: var(--navy-light); }
+
+.formula-block {
+    background: #f0f4ff;
+    border: 1px solid #d4ddf7;
+    border-radius: var(--radius-md);
+    padding: 14px 20px;
+    margin-bottom: 16px;
+    font-family: var(--mono);
+    font-size: 15px;
+    color: var(--navy-mid);
+    text-align: center;
+    transition: var(--transition);
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.formula-block:hover {
+    border-color: var(--navy-light);
+    background: #e8eeff;
+}
+
+.formula-legend {
+    display: grid;
+    gap: 1px;
+    background: #d4ddf7;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    margin-bottom: 24px;
+}
+.formula-legend.cols-1 { grid-template-columns: 1fr; }
+.formula-legend.cols-2 { grid-template-columns: 1fr 1fr; }
+.fl-cell {
+    background: #f8faff;
+    padding: 8px 12px;
+}
+.fl-cell .fl-sym {
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--navy-mid);
+    display: block;
+    margin-bottom: 2px;
+}
+.fl-cell .fl-desc {
+    font-family: var(--sans);
+    font-size: 11px;
+    color: var(--text-muted);
+    line-height: 1.4;
+}
+
+.info-strip {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    margin-bottom: 24px;
+}
+.info-cell {
+    background: #fafbfe;
+    padding: 12px 14px;
+    text-align: center;
+}
+.info-cell .ic-label {
+    font-size: 11px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    font-weight: 600;
+    display: block;
+    margin-bottom: 3px;
+}
+.info-cell .ic-val {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-main);
+    font-family: var(--mono);
+}
+
+.input-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 20px;
+}
+@media (max-width: 560px) {
+    .input-grid { grid-template-columns: 1fr; }
+    .model-tabs { grid-template-columns: 1fr; }
+    .info-strip { grid-template-columns: 1fr; }
+    .formula-legend.cols-2 { grid-template-columns: 1fr; }
+}
+
+.input-section-label {
+    grid-column: 1 / -1;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    padding: 4px 0 8px;
+    border-top: 1px solid var(--border);
+    margin-top: 4px;
+}
+.input-section-label:first-child {
+    border-top: none;
+    margin-top: 0;
+}
+
+.input-full { grid-column: 1 / -1; }
+
+.input-wrap { position: relative; }
+.input-wrap input {
+    padding-right: 64px;
+    margin-bottom: 18px;
+}
+.input-suffix {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-60%);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-dim);
+    pointer-events: none;
+    font-family: var(--mono);
+}
+
+.result-card {
+    margin-top: 24px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    animation: slideUp 0.35s ease both;
+}
+.result-card-header {
+    background: var(--navy);
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.result-card-header span {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.55);
+}
+.result-card-body {
+    padding: 22px 24px;
+    background: #fff;
+}
+.result-value-row {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+.result-value-row .val {
+    font-size: 44px;
+    font-weight: 700;
+    color: var(--navy);
+    line-height: 1;
+    font-family: var(--mono);
+    letter-spacing: -1px;
+}
+.result-value-row .unit {
+    font-size: 16px;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.metrics-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px;
+    margin-bottom: 16px;
+}
+.metric-block {
+    background: var(--surface, #f4f6fb);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+}
+.metric-block .mb-label {
+    font-size: 11px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+    display: block;
+    margin-bottom: 4px;
+}
+.metric-block .mb-val {
+    font-size: 18px;
+    font-weight: 700;
+    font-family: var(--mono);
+    color: var(--navy);
+}
+.metric-block .mb-sub {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
+.equation-trace {
+    background: #f0f4ff;
+    border: 1px solid #d4ddf7;
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--navy-mid);
+    margin-bottom: 16px;
+    line-height: 2;
+}
+
+.interpretation-box {
+    background: var(--surface, #f4f6fb);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.65;
+    border-left: 3px solid var(--accent);
+}
+</style>
+
+<!-- PAGE HEADER -->
+<div class="page-header">
+    <span class="badge">Parameters</span>
+    <h1>Injection Rate at Breakthrough <span style="font-size:15px;color:var(--text-muted);font-weight:400;">(Q<sub>ibt</sub>)</span></h1>
+    <p>Cumulative fluid injection volume at the moment the injected phase first arrives at a producing well, estimated via two approaches.</p>
+</div>
+
+<!-- MODEL SELECTOR TABS -->
+<div class="model-tabs" id="modelTabs">
+    <div class="model-tab active" data-model="dfw" onclick="selectModel('dfw')">
+        <span class="mt-number">Model 1</span>
+        <span class="mt-name">Fractional Flow Gradient</span>
+        <span class="mt-formula">Q<sub>ibt</sub> = 1 / (df<sub>w</sub> / dS<sub>w</sub>)</span>
+    </div>
+    <div class="model-tab" data-model="sat" onclick="selectModel('sat')">
+        <span class="mt-number">Model 2</span>
+        <span class="mt-name">Saturation Change</span>
+        <span class="mt-formula">Q<sub>ibt</sub> = S<sub>wf</sub> &minus; S<sub>wi</sub></span>
+    </div>
+</div>
+
+<!-- ACTIVE FORMULA DISPLAY -->
+<div class="formula-block" id="formulaDisplay">
+    Q<sub>ibt</sub> = 1 / (df<sub>w</sub> / dS<sub>w</sub>)
+</div>
+
+<!-- LEGEND (swaps with model) -->
+<div class="formula-legend cols-1" id="legendDfw">
+    <div class="fl-cell">
+        <span class="fl-sym">df<sub>w</sub> / dS<sub>w</sub></span>
+        <span class="fl-desc">Slope of the fractional flow curve at the flood front — the tangent drawn from initial water saturation</span>
+    </div>
+</div>
+
+<div class="formula-legend cols-2" id="legendSat" style="display:none;">
+    <div class="fl-cell">
+        <span class="fl-sym">S<sub>wf</sub></span>
+        <span class="fl-desc">Final (flood-front) water saturation at breakthrough (fraction)</span>
+    </div>
+    <div class="fl-cell">
+        <span class="fl-sym">S<sub>wi</sub></span>
+        <span class="fl-desc">Initial connate water saturation (fraction)</span>
+    </div>
+</div>
+
+<!-- CONTEXT STRIP -->
+<div class="info-strip">
+    <div class="info-cell" id="stripLeft">
+        <span class="ic-label">Input</span>
+        <span class="ic-val">df<sub>w</sub>/dS<sub>w</sub> slope</span>
+    </div>
+    <div class="info-cell">
+        <span class="ic-label">Output</span>
+        <span class="ic-val">PV injected</span>
+    </div>
+</div>
+
+<!-- FORM -->
+<form method="POST">
+    {% csrf_token %}
+    <input type="hidden" name="model" id="modelInput" value="dfw">
+
+    <!-- MODEL 1: Fractional Flow Gradient -->
+    <div id="dfwPanel">
+        <div class="input-grid">
+            <div class="input-section-label">Fractional Flow Gradient</div>
+            <div class="input-full">
+                <label for="dfw_dsw">Slope of Fractional Flow Curve &mdash; df<sub>w</sub>/dS<sub>w</sub></label>
+                <div class="input-wrap">
+                    <input type="number" step="any" name="dfw_dsw" id="dfw_dsw"
+                           placeholder="e.g. 2.50">
+                    <span class="input-suffix">1/frac</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODEL 2: Saturation Change -->
+    <div id="satPanel" style="display:none;">
+        <div class="input-grid">
+            <div class="input-section-label">Water Saturation Values</div>
+            <div>
+                <label for="Swf">Final Water Saturation &mdash; S<sub>wf</sub></label>
+                <div class="input-wrap">
+                    <input type="number" step="any" name="Swf" id="Swf"
+                           placeholder="e.g. 0.65">
+                    <span class="input-suffix">frac</span>
+                </div>
+            </div>
+            <div>
+                <label for="Swi">Initial Water Saturation &mdash; S<sub>wi</sub></label>
+                <div class="input-wrap">
+                    <input type="number" step="any" name="Swi" id="Swi"
+                           placeholder="e.g. 0.20">
+                    <span class="input-suffix">frac</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <button type="submit">Calculate Q<sub>ibt</sub></button>
+</form>
+
+<!-- RESULT -->
+{% if result is not None %}
+
+<div class="result-card">
+    <div class="result-card-header">
+        <span>Result</span>
+        <span>Injection Rate at Breakthrough &mdash; Q<sub style="color:rgba(255,255,255,0.55)">ibt</sub></span>
+    </div>
+    <div class="result-card-body">
+
+        <div class="result-value-row">
+            <span class="val">{{ result|floatformat:4 }}</span>
+            <span class="unit">PV</span>
+        </div>
+
+        {% if model == 'dfw' %}
+        <div class="metrics-row">
+            <div class="metric-block">
+                <span class="mb-label">df<sub>w</sub>/dS<sub>w</sub></span>
+                <span class="mb-val">{{ dfw_dsw|floatformat:4 }}</span>
+                <div class="mb-sub">slope (1/frac)</div>
+            </div>
+            <div class="metric-block">
+                <span class="mb-label">Q<sub>ibt</sub></span>
+                <span class="mb-val">{{ result|floatformat:4 }}</span>
+                <div class="mb-sub">pore volumes</div>
+            </div>
+        </div>
+        <div class="equation-trace">
+            Q<sub>ibt</sub> = 1 / (df<sub>w</sub> / dS<sub>w</sub>)<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= 1 / {{ dfw_dsw|floatformat:4 }}<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= <strong>{{ result|floatformat:4 }} PV</strong>
+        </div>
+
+        {% elif model == 'sat' %}
+        <div class="metrics-row">
+            <div class="metric-block">
+                <span class="mb-label">S<sub>wf</sub></span>
+                <span class="mb-val">{{ Swf|floatformat:4 }}</span>
+                <div class="mb-sub">fraction</div>
+            </div>
+            <div class="metric-block">
+                <span class="mb-label">S<sub>wi</sub></span>
+                <span class="mb-val">{{ Swi|floatformat:4 }}</span>
+                <div class="mb-sub">fraction</div>
+            </div>
+            <div class="metric-block">
+                <span class="mb-label">&Delta;S<sub>w</sub></span>
+                <span class="mb-val">{{ result|floatformat:4 }}</span>
+                <div class="mb-sub">S<sub>wf</sub> &minus; S<sub>wi</sub></div>
+            </div>
+        </div>
+        <div class="equation-trace">
+            Q<sub>ibt</sub> = S<sub>wf</sub> &minus; S<sub>wi</sub><br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= {{ Swf|floatformat:4 }} &minus; {{ Swi|floatformat:4 }}<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= <strong>{{ result|floatformat:4 }} PV</strong>
+        </div>
+        {% endif %}
+
+        {% if interpretation %}
+        <div class="interpretation-box">{{ interpretation }}</div>
+        {% endif %}
+
+    </div>
+</div>
+
+{% endif %}
+
+<a href="/" class="back">&#8592; Back to Dashboard</a>
+
+<script>
+function selectModel(model) {
+    document.getElementById('modelInput').value = model;
+
+    document.querySelectorAll('.model-tab').forEach(t => t.classList.remove('active'));
+    document.querySelector('[data-model="' + model + '"]').classList.add('active');
+
+    var isDfw = model === 'dfw';
+
+    document.getElementById('dfwPanel').style.display = isDfw ? 'block' : 'none';
+    document.getElementById('satPanel').style.display  = isDfw ? 'none'  : 'block';
+
+    document.getElementById('legendDfw').style.display = isDfw ? 'grid' : 'none';
+    document.getElementById('legendSat').style.display = isDfw ? 'none' : 'grid';
+
+    document.getElementById('formulaDisplay').innerHTML = isDfw
+        ? 'Q<sub>ibt</sub> = 1 / (df<sub>w</sub> / dS<sub>w</sub>)'
+        : 'Q<sub>ibt</sub> = S<sub>wf</sub> &minus; S<sub>wi</sub>';
+
+    document.getElementById('stripLeft').innerHTML =
+        '<span class="ic-label">Input</span>' +
+        '<span class="ic-val">' + (isDfw ? 'df<sub>w</sub>/dS<sub>w</sub> slope' : 'S<sub>wf</sub> &amp; S<sub>wi</sub>') + '</span>';
+}
+
+window.addEventListener('DOMContentLoaded', function () {
+    var saved = '{{ model|default:"dfw" }}';
+    if (saved) selectModel(saved);
+});
+</script>
+
+{% endblock %}

@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Relative Permeability Plot
+{% endblock %}
+
+{% block content %}
+
+<div class="container">
+
+    <h1>Relative Permeability Plot (Sw vs Kro/Krw)</h1>
+
+    <div class="formula">
+        Plot Sw against Kro/Krw (15 data points)
+    </div>
+
+    <form method="POST">
+        {% csrf_token %}
+
+        <table style="width:100%; text-align:center;">
+            <tr>
+                <th>Index</th>
+                <th>Sw</th>
+                <th>Kro/Krw</th>
+            </tr>
+
+            {% for i in "123456789012345" %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>
+                    <input type="number" step="any" name="sw{{ forloop.counter }}" required>
+                </td>
+                <td>
+                    <input type="number" step="any" name="kr{{ forloop.counter }}" required>
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+
+        <br>
+
+        <button type="submit">Plot Graph</button>
+    </form>
+
+    {% if plot_url %}
+    <div class="result">
+        <h3>Relative Permeability Curve</h3>
+        <img src="data:image/png;base64,{{ plot_url }}" style="width:100%; max-width:700px;">
+    </div>
+    {% endif %}
+
+    <a href="/">← Back to Dashboard</a>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,166 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Unit Converter
+{% endblock %}
+
+{% block content %}
+
+<div class="container">
+
+    <h1>EOR Unit Converter</h1>
+
+    <div class="formula">
+
+        Convert between petroleum engineering,
+        reservoir engineering, and standard SI units.
+
+        <hr>
+
+        <p><strong>Supported Categories:</strong></p>
+
+        <p>Length</p>
+        <p>Area</p>
+        <p>Volume</p>
+        <p>Pressure</p>
+        <p>Temperature</p>
+        <p>Density</p>
+        <p>Viscosity</p>
+        <p>Permeability</p>
+        <p>Flow Rate</p>
+
+    </div>
+
+    <form method="POST">
+
+        {% csrf_token %}
+
+        <label>Value</label>
+        <input
+            type="number"
+            step="any"
+            name="value"
+            required
+        >
+
+        <label>From Unit</label>
+
+        <select name="from_unit">
+
+            <!-- Length -->
+            <option value="meter">meter</option>
+            <option value="foot">foot</option>
+            <option value="inch">inch</option>
+            <option value="kilometer">kilometer</option>
+            <option value="mile">mile</option>
+
+            <!-- Area -->
+            <option value="meter**2">m²</option>
+            <option value="foot**2">ft²</option>
+            <option value="acre">acre</option>
+
+            <!-- Volume -->
+            <option value="meter**3">m³</option>
+            <option value="foot**3">ft³</option>
+            <option value="liter">liter</option>
+
+            <!-- Pressure -->
+            <option value="psi">psi</option>
+            <option value="bar">bar</option>
+            <option value="pascal">Pa</option>
+            <option value="kilopascal">kPa</option>
+
+            <!-- Temperature -->
+            <option value="degC">°C</option>
+            <option value="degF">°F</option>
+            <option value="kelvin">K</option>
+
+            <!-- Density -->
+            <option value="kg/m^3">kg/m³</option>
+
+            <!-- Viscosity -->
+            <option value="centipoise">cP</option>
+
+        </select>
+
+        <label>To Unit</label>
+
+        <select name="to_unit">
+
+            <!-- Length -->
+            <option value="meter">meter</option>
+            <option value="foot">foot</option>
+            <option value="inch">inch</option>
+            <option value="kilometer">kilometer</option>
+            <option value="mile">mile</option>
+
+            <!-- Area -->
+            <option value="meter**2">m²</option>
+            <option value="foot**2">ft²</option>
+            <option value="acre">acre</option>
+
+            <!-- Volume -->
+            <option value="meter**3">m³</option>
+            <option value="foot**3">ft³</option>
+            <option value="liter">liter</option>
+
+            <!-- Pressure -->
+            <option value="psi">psi</option>
+            <option value="bar">bar</option>
+            <option value="pascal">Pa</option>
+            <option value="kilopascal">kPa</option>
+
+            <!-- Temperature -->
+            <option value="degC">°C</option>
+            <option value="degF">°F</option>
+            <option value="kelvin">K</option>
+
+            <!-- Density -->
+            <option value="kg/m^3">kg/m³</option>
+
+            <!-- Viscosity -->
+            <option value="centipoise">cP</option>
+
+        </select>
+
+        <button type="submit">
+            Convert Unit
+        </button>
+
+    </form>
+
+    {% if result is not None %}
+
+    <div class="result">
+
+        <h3>Conversion Result</h3>
+
+        <p>
+
+            <strong>
+                {{ result }}
+            </strong>
+
+        </p>
+
+    </div>
+
+    {% endif %}
+
+    {% if error %}
+
+    <div class="result">
+
+        <p>{{ error }}</p>
+
+    </div>
+
+    {% endif %}
+
+    <a href="/">
+        ← Back to Dashboard
+    </a>
+
+</div>
+
+{% endblock %}

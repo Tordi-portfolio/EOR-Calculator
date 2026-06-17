@@ -1,0 +1,478 @@
+{% extends 'base.html' %}
+{% block title %}Fractional Flow Slope (b) — EOR Solver{% endblock %}
+{% block content %}
+
+<style>
+.page-header {
+    text-align: center;
+    margin-bottom: 28px;
+}
+.page-header p {
+    font-size: 14px;
+    color: var(--text-muted);
+    max-width: 500px;
+    margin: 8px auto 0;
+    line-height: 1.6;
+}
+
+.input-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 20px;
+}
+@media (max-width: 560px) {
+    .input-grid { grid-template-columns: 1fr; }
+}
+
+.input-section-label {
+    grid-column: 1 / -1;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    padding: 4px 0 8px;
+    border-top: 1px solid var(--border);
+    margin-top: 4px;
+}
+.input-section-label:first-child {
+    border-top: none;
+    margin-top: 0;
+}
+
+/* point badge beside section label */
+.point-badge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 20px;
+    margin-left: 8px;
+    letter-spacing: 0.3px;
+    vertical-align: middle;
+}
+.point-badge-1 { background: rgba(26,82,184,0.10); color: var(--navy-mid); }
+.point-badge-2 { background: rgba(0,194,168,0.12); color: #007a6b; }
+
+.input-wrap { position: relative; }
+.input-wrap input {
+    padding-right: 64px;
+    margin-bottom: 18px;
+}
+.input-suffix {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-60%);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-dim);
+    pointer-events: none;
+    font-family: var(--mono);
+}
+
+.formula-block {
+    background: #f0f4ff;
+    border: 1px solid #d4ddf7;
+    border-radius: var(--radius-md);
+    padding: 16px 20px;
+    margin-bottom: 16px;
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--navy-mid);
+    text-align: center;
+    line-height: 1.8;
+    transition: var(--transition);
+}
+.formula-block:hover {
+    border-color: var(--navy-light);
+    background: #e8eeff;
+}
+.formula-block .f-numerator {
+    border-bottom: 1.5px solid var(--navy-mid);
+    padding-bottom: 6px;
+    margin-bottom: 6px;
+    display: block;
+}
+.formula-block .f-label {
+    font-size: 11px;
+    font-family: var(--sans);
+    color: var(--text-dim);
+    display: block;
+    margin-top: 4px;
+}
+
+.formula-legend {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1px;
+    background: #d4ddf7;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    margin-bottom: 24px;
+}
+.fl-cell {
+    background: #f8faff;
+    padding: 8px 12px;
+}
+.fl-cell .fl-sym {
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--navy-mid);
+    display: block;
+    margin-bottom: 2px;
+}
+.fl-cell .fl-desc {
+    font-family: var(--sans);
+    font-size: 11px;
+    color: var(--text-muted);
+    line-height: 1.4;
+}
+@media (max-width: 480px) {
+    .formula-legend { grid-template-columns: 1fr 1fr; }
+}
+
+.info-strip {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    margin-bottom: 24px;
+}
+.info-cell {
+    background: #fafbfe;
+    padding: 12px 14px;
+    text-align: center;
+}
+.info-cell .ic-label {
+    font-size: 11px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    font-weight: 600;
+    display: block;
+    margin-bottom: 3px;
+}
+.info-cell .ic-val {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-main);
+    font-family: var(--mono);
+}
+@media (max-width: 480px) {
+    .info-strip { grid-template-columns: 1fr; }
+}
+
+.result-card {
+    margin-top: 24px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    animation: slideUp 0.35s ease both;
+}
+.result-card-header {
+    background: var(--navy);
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.result-card-header span {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.55);
+}
+.result-card-body {
+    padding: 22px 24px;
+    background: #fff;
+}
+.result-value-row {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+.result-value-row .val {
+    font-size: 44px;
+    font-weight: 700;
+    color: var(--navy);
+    line-height: 1;
+    font-family: var(--mono);
+    letter-spacing: -1px;
+}
+.result-value-row .unit {
+    font-size: 16px;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+/* two-point comparison table */
+.point-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    margin-bottom: 16px;
+}
+.point-table th {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    padding: 8px 12px;
+    text-align: left;
+    background: var(--surface, #f4f6fb);
+    border: 1px solid var(--border);
+}
+.point-table td {
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--navy);
+}
+.point-table tr:nth-child(even) td { background: #fafbfe; }
+.pt-label {
+    font-family: var(--sans);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.equation-trace {
+    background: #f0f4ff;
+    border: 1px solid #d4ddf7;
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--navy-mid);
+    margin-bottom: 16px;
+    line-height: 2;
+}
+
+.interpretation-box {
+    background: var(--surface, #f4f6fb);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.65;
+    border-left: 3px solid var(--accent);
+}
+</style>
+
+<!-- PAGE HEADER -->
+<div class="page-header">
+    <span class="badge">Parameters</span>
+    <h1>Fractional Flow Slope <span style="font-size:15px;color:var(--text-muted);font-weight:400;">(b)</span></h1>
+    <p>The slope of the ln(k<sub>ro</sub>/k<sub>rw</sub>) vs S<sub>w</sub> straight line, derived from two data points on the relative permeability curve.</p>
+</div>
+
+<!-- FORMULA (fraction layout) -->
+<div class="formula-block">
+    <span class="f-numerator">
+        ln(k<sub>ro</sub>/k<sub>rw</sub>)<sub>2</sub> &minus; ln(k<sub>ro</sub>/k<sub>rw</sub>)<sub>1</sub>
+    </span>
+    S<sub>w2</sub> &minus; S<sub>w1</sub>
+    <span class="f-label">b = numerator &divide; denominator</span>
+</div>
+
+<!-- LEGEND -->
+<div class="formula-legend">
+    <div class="fl-cell">
+        <span class="fl-sym">k<sub>ro</sub></span>
+        <span class="fl-desc">Oil relative permeability (fraction)</span>
+    </div>
+    <div class="fl-cell">
+        <span class="fl-sym">k<sub>rw</sub></span>
+        <span class="fl-desc">Water relative permeability (fraction)</span>
+    </div>
+    <div class="fl-cell">
+        <span class="fl-sym">S<sub>w</sub></span>
+        <span class="fl-desc">Water saturation (fraction)</span>
+    </div>
+</div>
+
+<!-- CONTEXT STRIP -->
+<div class="info-strip">
+    <div class="info-cell">
+        <span class="ic-label">Inputs</span>
+        <span class="ic-val">2 data points</span>
+    </div>
+    <div class="info-cell">
+        <span class="ic-label">Method</span>
+        <span class="ic-val">ln ratio</span>
+    </div>
+    <div class="info-cell">
+        <span class="ic-label">Output</span>
+        <span class="ic-val">b (slope)</span>
+    </div>
+</div>
+
+<!-- FORM -->
+<form method="POST">
+    {% csrf_token %}
+
+    <div class="input-grid">
+
+        <!-- POINT 1 -->
+        <div class="input-section-label">
+            Point 1
+            <span class="point-badge point-badge-1">S<sub>w1</sub></span>
+        </div>
+
+        <div>
+            <label for="kro1">Oil Rel. Permeability &mdash; k<sub>ro1</sub></label>
+            <div class="input-wrap">
+                <input type="number" step="any" name="kro1" id="kro1"
+                       placeholder="e.g. 0.80" required>
+                <span class="input-suffix">frac</span>
+            </div>
+        </div>
+
+        <div>
+            <label for="krw1">Water Rel. Permeability &mdash; k<sub>rw1</sub></label>
+            <div class="input-wrap">
+                <input type="number" step="any" name="krw1" id="krw1"
+                       placeholder="e.g. 0.05" required>
+                <span class="input-suffix">frac</span>
+            </div>
+        </div>
+
+        <div class="input-full">
+            <label for="Sw1">Water Saturation &mdash; S<sub>w1</sub></label>
+            <div class="input-wrap">
+                <input type="number" step="any" name="Sw1" id="Sw1"
+                       placeholder="e.g. 0.20" required>
+                <span class="input-suffix">frac</span>
+            </div>
+        </div>
+
+        <!-- POINT 2 -->
+        <div class="input-section-label">
+            Point 2
+            <span class="point-badge point-badge-2">S<sub>w2</sub></span>
+        </div>
+
+        <div>
+            <label for="kro2">Oil Rel. Permeability &mdash; k<sub>ro2</sub></label>
+            <div class="input-wrap">
+                <input type="number" step="any" name="kro2" id="kro2"
+                       placeholder="e.g. 0.30" required>
+                <span class="input-suffix">frac</span>
+            </div>
+        </div>
+
+        <div>
+            <label for="krw2">Water Rel. Permeability &mdash; k<sub>rw2</sub></label>
+            <div class="input-wrap">
+                <input type="number" step="any" name="krw2" id="krw2"
+                       placeholder="e.g. 0.40" required>
+                <span class="input-suffix">frac</span>
+            </div>
+        </div>
+
+        <div class="input-full">
+            <label for="Sw2">Water Saturation &mdash; S<sub>w2</sub></label>
+            <div class="input-wrap">
+                <input type="number" step="any" name="Sw2" id="Sw2"
+                       placeholder="e.g. 0.65" required>
+                <span class="input-suffix">frac</span>
+            </div>
+        </div>
+
+    </div>
+
+    <button type="submit">Calculate Slope (b)</button>
+</form>
+
+<!-- RESULT -->
+{% if result is not None %}
+
+<div class="result-card">
+    <div class="result-card-header">
+        <span>Result</span>
+        <span>Fractional Flow Slope &mdash; b</span>
+    </div>
+    <div class="result-card-body">
+
+        <div class="result-value-row">
+            <span class="val">{{ result|floatformat:4 }}</span>
+            <span class="unit">dimensionless</span>
+        </div>
+
+        <!-- two-point comparison table -->
+        <table class="point-table">
+            <thead>
+                <tr>
+                    <th>Parameter</th>
+                    <th>Point 1 <span class="point-badge point-badge-1" style="font-size:9px;">S<sub>w1</sub></span></th>
+                    <th>Point 2 <span class="point-badge point-badge-2" style="font-size:9px;">S<sub>w2</sub></span></th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="pt-label">k<sub>ro</sub></td>
+                    <td>{{ kro1|floatformat:4 }}</td>
+                    <td>{{ kro2|floatformat:4 }}</td>
+                </tr>
+                <tr>
+                    <td class="pt-label">k<sub>rw</sub></td>
+                    <td>{{ krw1|floatformat:4 }}</td>
+                    <td>{{ krw2|floatformat:4 }}</td>
+                </tr>
+                <tr>
+                    <td class="pt-label">S<sub>w</sub></td>
+                    <td>{{ Sw1|floatformat:4 }}</td>
+                    <td>{{ Sw2|floatformat:4 }}</td>
+                </tr>
+                <tr>
+                    <td class="pt-label">ln(k<sub>ro</sub>/k<sub>rw</sub>)</td>
+                    <td id="lnRatio1">—</td>
+                    <td id="lnRatio2">—</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="equation-trace" id="eqTrace">
+            b = [ ln(k<sub>ro</sub>/k<sub>rw</sub>)<sub>2</sub> &minus; ln(k<sub>ro</sub>/k<sub>rw</sub>)<sub>1</sub> ] / (S<sub>w2</sub> &minus; S<sub>w1</sub>)<br>
+            &nbsp;&nbsp;= [ <span id="ln2val">—</span> &minus; <span id="ln1val">—</span> ] / ({{ Sw2|floatformat:4 }} &minus; {{ Sw1|floatformat:4 }})<br>
+            &nbsp;&nbsp;= <strong>{{ result|floatformat:4 }}</strong>
+        </div>
+
+        {% if interpretation %}
+        <div class="interpretation-box">{{ interpretation }}</div>
+        {% endif %}
+
+    </div>
+</div>
+
+<script>
+window.addEventListener('DOMContentLoaded', function () {
+    var kro1 = {{ kro1 }};
+    var krw1 = {{ krw1 }};
+    var kro2 = {{ kro2 }};
+    var krw2 = {{ krw2 }};
+
+    var ln1 = Math.log(kro1 / krw1);
+    var ln2 = Math.log(kro2 / krw2);
+
+    document.getElementById('lnRatio1').textContent = ln1.toFixed(4);
+    document.getElementById('lnRatio2').textContent = ln2.toFixed(4);
+    document.getElementById('ln1val').textContent   = ln1.toFixed(4);
+    document.getElementById('ln2val').textContent   = ln2.toFixed(4);
+});
+</script>
+
+{% endif %}
+
+<a href="/" class="back">&#8592; Back to Dashboard</a>
+
+{% endblock %}

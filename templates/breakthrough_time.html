@@ -1,0 +1,301 @@
+{% extends 'base.html' %}
+{% block title %}Breakthrough Time — EOR Solver{% endblock %}
+{% block content %}
+
+<style>
+.page-header {
+    text-align: center;
+    margin-bottom: 28px;
+}
+.page-header p {
+    font-size: 14px;
+    color: var(--text-muted);
+    max-width: 500px;
+    margin: 8px auto 0;
+    line-height: 1.6;
+}
+
+.input-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 20px;
+}
+@media (max-width: 560px) {
+    .input-grid { grid-template-columns: 1fr; }
+}
+
+.input-wrap {
+    position: relative;
+}
+.input-wrap input {
+    padding-right: 52px;
+    margin-bottom: 18px;
+}
+.input-suffix {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-60%);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-dim);
+    pointer-events: none;
+    font-family: var(--mono);
+}
+
+.result-card {
+    margin-top: 24px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    animation: slideUp 0.35s ease both;
+}
+.result-card-header {
+    background: var(--navy);
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.result-card-header span {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.55);
+}
+.result-card-body {
+    padding: 22px 24px;
+    background: #fff;
+}
+.result-value-row {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+.result-value-row .val {
+    font-size: 44px;
+    font-weight: 700;
+    color: var(--navy);
+    line-height: 1;
+    font-family: var(--mono);
+    letter-spacing: -1px;
+}
+.result-value-row .unit {
+    font-size: 16px;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+.interpretation-box {
+    background: var(--surface, #f4f6fb);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.65;
+    border-left: 3px solid var(--accent);
+    margin-bottom: 20px;
+}
+
+.chart-wrap {
+    border-top: 1px solid var(--border);
+    padding-top: 20px;
+    margin-top: 4px;
+}
+.chart-label {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+}
+</style>
+
+<!-- PAGE HEADER -->
+<div class="page-header">
+    <span class="badge">Timing Analysis</span>
+    <h1>Water Breakthrough Time</h1>
+    <p>Estimates when injected water will first arrive at a production well, based on pore volume and injection rate.</p>
+</div>
+
+<!-- FORMULA -->
+<div class="formula">
+    t<sub>bt</sub> = ( &phi; &middot; A &middot; h &middot; S<sub>wi</sub> ) / ( q<sub>w</sub> &middot; B<sub>w</sub> )
+</div>
+
+<!-- FORM -->
+<form method="POST">
+    {% csrf_token %}
+
+    <div class="input-grid">
+
+        <div>
+            <label for="phi">Porosity &mdash; &phi;</label>
+            <div class="input-wrap">
+                <input type="number" step="any" name="phi" id="phi"
+                       placeholder="e.g. 0.25" required>
+                <span class="input-suffix">frac</span>
+            </div>
+        </div>
+
+        <div>
+            <label for="A">Area &mdash; A</label>
+            <div class="input-wrap">
+                <input type="number" step="any" name="A" id="A"
+                       placeholder="e.g. 5000" required>
+                <span class="input-suffix">ft²</span>
+            </div>
+        </div>
+
+        <div>
+            <label for="h">Thickness &mdash; h</label>
+            <div class="input-wrap">
+                <input type="number" step="any" name="h" id="h"
+                       placeholder="e.g. 30" required>
+                <span class="input-suffix">ft</span>
+            </div>
+        </div>
+
+        <div>
+            <label for="swi">Initial Water Saturation &mdash; S<sub>wi</sub></label>
+            <div class="input-wrap">
+                <input type="number" step="any" name="swi" id="swi"
+                       placeholder="e.g. 0.20" required>
+                <span class="input-suffix">frac</span>
+            </div>
+        </div>
+
+        <div>
+            <label for="qw">Injection Rate &mdash; q<sub>w</sub></label>
+            <div class="input-wrap">
+                <input type="number" step="any" name="qw" id="qw"
+                       placeholder="e.g. 500" required>
+                <span class="input-suffix">bbl/d</span>
+            </div>
+        </div>
+
+        <div>
+            <label for="Bw">Formation Volume Factor &mdash; B<sub>w</sub></label>
+            <div class="input-wrap">
+                <input type="number" step="any" name="Bw" id="Bw"
+                       placeholder="e.g. 1.02" required>
+                <span class="input-suffix">rb/stb</span>
+            </div>
+        </div>
+
+    </div>
+
+    <button type="submit">Calculate Breakthrough Time</button>
+</form>
+
+<!-- RESULT -->
+{% if result is not None %}
+
+<div class="result-card">
+
+    <div class="result-card-header">
+        <span>Result</span>
+        <span>Water Breakthrough Time</span>
+    </div>
+
+    <div class="result-card-body">
+
+        <div class="result-value-row">
+            <span class="val">{{ result|floatformat:2 }}</span>
+            <span class="unit">days</span>
+        </div>
+
+        {% if interpretation %}
+        <div class="interpretation-box">{{ interpretation }}</div>
+        {% endif %}
+
+        <!-- CHART -->
+        {% if production_data %}
+        <div class="chart-wrap">
+            <p class="chart-label">Oil Production Rate Profile</p>
+            <canvas id="chart" height="90"></canvas>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+
+{% if production_data %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+(function () {
+    const labels = [{% for d in production_data %}"Year {{ d.time }}",{% endfor %}];
+    const data   = [{% for d in production_data %}{{ d.oil_rate }},{% endfor %}];
+
+    const navy   = getComputedStyle(document.documentElement)
+                    .getPropertyValue('--navy').trim() || '#0b2e6e';
+    const accent = getComputedStyle(document.documentElement)
+                    .getPropertyValue('--accent').trim() || '#00c2a8';
+    const border = getComputedStyle(document.documentElement)
+                    .getPropertyValue('--border').trim() || '#dce3f0';
+    const muted  = getComputedStyle(document.documentElement)
+                    .getPropertyValue('--text-muted').trim() || '#5a6c8a';
+
+    new Chart(document.getElementById('chart'), {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Oil Production Rate (bbl/d)',
+                data: data,
+                borderColor: navy,
+                backgroundColor: accent + '18',
+                borderWidth: 2,
+                pointBackgroundColor: navy,
+                pointRadius: 4,
+                pointHoverRadius: 6,
+                fill: true,
+                tension: 0.35
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    labels: {
+                        font: { family: 'Inter, sans-serif', size: 12 },
+                        color: muted
+                    }
+                },
+                tooltip: {
+                    backgroundColor: navy,
+                    titleFont: { family: 'Inter, sans-serif', size: 12 },
+                    bodyFont:  { family: 'Inter, sans-serif', size: 12 },
+                    padding: 10,
+                    cornerRadius: 6
+                }
+            },
+            scales: {
+                x: {
+                    grid: { color: border },
+                    ticks: {
+                        font: { family: 'Inter, sans-serif', size: 11 },
+                        color: muted
+                    }
+                },
+                y: {
+                    grid: { color: border },
+                    ticks: {
+                        font: { family: 'Inter, sans-serif', size: 11 },
+                        color: muted
+                    }
+                }
+            }
+        }
+    });
+}());
+</script>
+{% endif %}
+
+{% endif %}
+
+<a href="/" class="back">&#8592; Back to Dashboard</a>
+
+{% endblock %}

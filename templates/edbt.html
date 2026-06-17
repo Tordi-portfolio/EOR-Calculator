@@ -1,0 +1,333 @@
+{% extends 'base.html' %}
+{% block title %}Displacement Efficiency at Breakthrough (E&#x1D48;&#x1D47;&#x1D57;) — EOR Solver{% endblock %}
+{% block content %}
+
+<style>
+.page-header {
+    text-align: center;
+    margin-bottom: 28px;
+}
+.page-header p {
+    font-size: 14px;
+    color: var(--text-muted);
+    max-width: 500px;
+    margin: 8px auto 0;
+    line-height: 1.6;
+}
+
+.input-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 0 20px;
+}
+@media (max-width: 640px) {
+    .input-grid { grid-template-columns: 1fr; }
+}
+
+.input-wrap {
+    position: relative;
+}
+.input-wrap input {
+    padding-right: 52px;
+    margin-bottom: 18px;
+}
+.input-suffix {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-60%);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-dim);
+    pointer-events: none;
+    font-family: var(--mono);
+}
+
+.info-strip {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    margin-bottom: 24px;
+}
+.info-cell {
+    background: #fafbfe;
+    padding: 12px 14px;
+    text-align: center;
+}
+.info-cell .ic-label {
+    font-size: 11px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    font-weight: 600;
+    display: block;
+    margin-bottom: 3px;
+}
+.info-cell .ic-val {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-main);
+    font-family: var(--mono);
+}
+@media (max-width: 480px) {
+    .info-strip { grid-template-columns: 1fr; }
+}
+
+.result-card {
+    margin-top: 24px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    animation: slideUp 0.35s ease both;
+}
+.result-card-header {
+    background: var(--navy);
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.result-card-header span {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.55);
+}
+.result-card-body {
+    padding: 22px 24px;
+    background: #fff;
+}
+.result-value-row {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+.result-value-row .val {
+    font-size: 44px;
+    font-weight: 700;
+    color: var(--navy);
+    line-height: 1;
+    font-family: var(--mono);
+    letter-spacing: -1px;
+}
+.result-value-row .unit {
+    font-size: 16px;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.gauge-wrap { margin-bottom: 16px; }
+.gauge-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-bottom: 5px;
+    font-family: var(--mono);
+}
+.gauge-track {
+    height: 8px;
+    background: #edf0f7;
+    border-radius: 20px;
+    overflow: hidden;
+}
+.gauge-fill {
+    height: 100%;
+    border-radius: 20px;
+    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* saturation diagram */
+.sat-diagram {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 24px;
+}
+.sat-block {
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 12px 10px;
+    text-align: center;
+    background: #fafbfe;
+}
+.sat-block .sb-label {
+    font-size: 11px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+.sat-block .sb-sym {
+    font-size: 18px;
+    font-family: var(--mono);
+    font-weight: 700;
+    color: var(--navy);
+}
+.sat-block .sb-val {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 2px;
+    font-family: var(--mono);
+}
+@media (max-width: 480px) {
+    .sat-diagram { grid-template-columns: 1fr; }
+}
+
+.interpretation-box {
+    background: var(--surface, #f4f6fb);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.65;
+    border-left: 3px solid var(--accent);
+}
+</style>
+
+<!-- PAGE HEADER -->
+<div class="page-header">
+    <span class="badge">Displacement Analysis</span>
+    <h1>Displacement Efficiency at Breakthrough</h1>
+    <p>Measures the fraction of moveable oil displaced from the swept zone at the moment injected fluid breaks through to a production well.</p>
+</div>
+
+<!-- FORMULA -->
+<div class="formula">
+    E<sub>dbt</sub> = ( S<sub>or</sub> &minus; S<sub>ob</sub> ) / ( S<sub>or</sub> &minus; S<sub>wi</sub> )
+</div>
+
+<!-- CONTEXT STRIP -->
+<div class="info-strip">
+    <div class="info-cell">
+        <span class="ic-label">Output range</span>
+        <span class="ic-val">0 – 1</span>
+    </div>
+    <div class="info-cell">
+        <span class="ic-label">Ideal</span>
+        <span class="ic-val">E<sub>dbt</sub> → 1</span>
+    </div>
+    <div class="info-cell">
+        <span class="ic-label">Constraint</span>
+        <span class="ic-val">S<sub>or</sub> &gt; S<sub>wi</sub></span>
+    </div>
+</div>
+
+<!-- FORM -->
+<form method="POST">
+    {% csrf_token %}
+
+    <div class="input-grid">
+
+        <div>
+            <label for="Sor">Residual Oil Saturation &mdash; S<sub>or</sub></label>
+            <div class="input-wrap">
+                <input type="number" step="any" name="Sor" id="Sor"
+                       placeholder="e.g. 0.30" required>
+                <span class="input-suffix">frac</span>
+            </div>
+        </div>
+
+        <div>
+            <label for="Sob">Oil Sat. at Breakthrough &mdash; S<sub>ob</sub></label>
+            <div class="input-wrap">
+                <input type="number" step="any" name="Sob" id="Sob"
+                       placeholder="e.g. 0.20" required>
+                <span class="input-suffix">frac</span>
+            </div>
+        </div>
+
+        <div>
+            <label for="Swi">Initial Water Saturation &mdash; S<sub>wi</sub></label>
+            <div class="input-wrap">
+                <input type="number" step="any" name="Swi" id="Swi"
+                       placeholder="e.g. 0.15" required>
+                <span class="input-suffix">frac</span>
+            </div>
+        </div>
+
+    </div>
+
+    <button type="submit">Calculate E<sub>dbt</sub></button>
+</form>
+
+<!-- RESULT -->
+{% if result is not None %}
+
+<div class="result-card">
+
+    <div class="result-card-header">
+        <span>Result</span>
+        <span>Displacement Efficiency</span>
+    </div>
+
+    <div class="result-card-body">
+
+        <!-- input summary -->
+        <div class="sat-diagram">
+            <div class="sat-block">
+                <div class="sb-label">S<sub>or</sub></div>
+                <div class="sb-sym">{{ Sor|floatformat:3 }}</div>
+                <div class="sb-val">Residual oil</div>
+            </div>
+            <div class="sat-block">
+                <div class="sb-label">S<sub>ob</sub></div>
+                <div class="sb-sym">{{ Sob|floatformat:3 }}</div>
+                <div class="sb-val">At breakthrough</div>
+            </div>
+            <div class="sat-block">
+                <div class="sb-label">S<sub>wi</sub></div>
+                <div class="sb-sym">{{ Swi|floatformat:3 }}</div>
+                <div class="sb-val">Initial water</div>
+            </div>
+        </div>
+
+        <div class="result-value-row">
+            <span class="val">{{ result|floatformat:4 }}</span>
+            <span class="unit">fraction</span>
+        </div>
+
+        <div class="gauge-wrap">
+            <div class="gauge-labels">
+                <span>0</span>
+                <span>0.25</span>
+                <span>0.50</span>
+                <span>0.75</span>
+                <span>1.0</span>
+            </div>
+            <div class="gauge-track">
+                <div class="gauge-fill" id="gauge"
+                     style="width:0%; background:
+                        {% if result >= 0.75 %}var(--accent)
+                        {% elif result >= 0.5 %}#f59e0b
+                        {% else %}#ef4444{% endif %};">
+                </div>
+            </div>
+        </div>
+
+        {% if interpretation %}
+        <div class="interpretation-box">{{ interpretation }}</div>
+        {% endif %}
+
+    </div>
+</div>
+
+<script>
+window.addEventListener('DOMContentLoaded', function () {
+    var pct = Math.min(Math.max({{ result }} * 100, 0), 100);
+    document.getElementById('gauge').style.width = pct.toFixed(1) + '%';
+});
+</script>
+
+{% endif %}
+
+<a href="/" class="back">&#8592; Back to Dashboard</a>
+
+{% endblock %}

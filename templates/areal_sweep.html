@@ -1,0 +1,260 @@
+{% extends 'base.html' %}
+{% block title %}Areal Sweep Efficiency — EOR Solver{% endblock %}
+{% block content %}
+
+{% load static %}
+
+<style>
+/* ── PAGE-SPECIFIC ONLY ── */
+
+.page-header {
+    text-align: center;
+    margin-bottom: 28px;
+}
+
+.page-header .badge {
+    margin-bottom: 10px;
+}
+
+.page-header p {
+    font-size: 14px;
+    color: var(--text-muted);
+    max-width: 480px;
+    margin: 8px auto 0;
+    line-height: 1.6;
+}
+
+/* two-column grid for inputs */
+.input-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 20px;
+}
+
+@media (max-width: 560px) {
+    .input-grid { grid-template-columns: 1fr; }
+}
+
+/* input unit suffix wrapper */
+.input-wrap {
+    position: relative;
+}
+
+.input-wrap input {
+    padding-right: 48px;
+    margin-bottom: 18px;
+}
+
+.input-suffix {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-60%);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-dim);
+    pointer-events: none;
+    font-family: var(--mono);
+}
+
+/* result card */
+.result-card {
+    margin-top: 24px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    animation: slideUp 0.35s ease both;
+}
+
+.result-card-header {
+    background: var(--navy);
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.result-card-header span {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.55);
+}
+
+.result-card-body {
+    padding: 22px 24px;
+    background: #fff;
+}
+
+.result-value-row {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    margin-bottom: 18px;
+}
+
+.result-value-row .val {
+    font-size: 44px;
+    font-weight: 700;
+    color: var(--navy);
+    line-height: 1;
+    font-family: var(--mono);
+    letter-spacing: -1px;
+}
+
+.result-value-row .unit {
+    font-size: 18px;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+/* efficiency gauge bar */
+.gauge-wrap {
+    margin-bottom: 16px;
+}
+
+.gauge-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-bottom: 5px;
+    font-family: var(--mono);
+}
+
+.gauge-track {
+    height: 8px;
+    background: #edf0f7;
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+.gauge-fill {
+    height: 100%;
+    border-radius: 20px;
+    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    background: var(--fill-color, var(--accent));
+}
+
+.interpretation-box {
+    background: var(--surface, #f4f6fb);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.65;
+    border-left: 3px solid var(--accent);
+}
+
+/* formula subscripts */
+sub {
+    font-size: 0.72em;
+    vertical-align: -0.2em;
+}
+
+.form-actions {
+    margin-top: 4px;
+}
+</style>
+
+<!-- PAGE HEADER -->
+<div class="page-header">
+    <span class="badge">Sweep Analysis</span>
+    <h1>Areal Sweep Efficiency</h1>
+    <p>Ratio of reservoir area contacted by the displacing fluid to the total reservoir area.</p>
+</div>
+
+<!-- FORMULA -->
+<div class="formula">
+    E<sub>A</sub> = ( A<sub>s</sub> / A<sub>t</sub> ) &times; 100
+</div>
+
+<!-- FORM -->
+<form method="POST">
+    {% csrf_token %}
+
+    <div class="input-grid">
+
+        <div>
+            <label for="As">Swept Area &mdash; A<sub>s</sub></label>
+            <div class="input-wrap">
+                <input type="number" step="any" name="As" id="As"
+                       placeholder="e.g. 750" required>
+                <span class="input-suffix">ac</span>
+            </div>
+        </div>
+
+        <div>
+            <label for="At">Total Reservoir Area &mdash; A<sub>t</sub></label>
+            <div class="input-wrap">
+                <input type="number" step="any" name="At" id="At"
+                       placeholder="e.g. 1000" required>
+                <span class="input-suffix">ac</span>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="form-actions">
+        <button type="submit">Calculate Areal Sweep Efficiency</button>
+    </div>
+</form>
+
+<!-- RESULT -->
+{% if result is not None %}
+
+<div class="result-card">
+
+    <div class="result-card-header">
+        <span>Result</span>
+        <span>Areal Sweep Efficiency</span>
+    </div>
+
+    <div class="result-card-body">
+
+        <div class="result-value-row">
+            <span class="val">{{ result|floatformat:2 }}</span>
+            <span class="unit">%</span>
+        </div>
+
+        <!-- Gauge bar -->
+        <div class="gauge-wrap">
+            <div class="gauge-labels">
+                <span>0%</span>
+                <span>25%</span>
+                <span>50%</span>
+                <span>75%</span>
+                <span>100%</span>
+            </div>
+            <div class="gauge-track">
+                <div class="gauge-fill"
+                     id="gauge"
+                     style="width: 0%;
+                            --fill-color: {% if result >= 75 %}var(--accent){% elif result >= 50 %}#f59e0b{% else %}#ef4444{% endif %};">
+                </div>
+            </div>
+        </div>
+
+        {% if interpretation %}
+        <div class="interpretation-box">
+            {{ interpretation }}
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+
+<script>
+    // animate gauge on load
+    window.addEventListener('DOMContentLoaded', function () {
+        var pct = Math.min(Math.max({{ result }}, 0), 100);
+        document.getElementById('gauge').style.width = pct + '%';
+    });
+</script>
+
+{% endif %}
+
+<a href="/" class="back">&#8592; Back to Dashboard</a>
+
+{% endblock %}

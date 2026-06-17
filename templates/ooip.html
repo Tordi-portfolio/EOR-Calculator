@@ -1,0 +1,421 @@
+{% extends 'base.html' %}
+{% block title %}Original Oil In Place (OOIP) — EOR Solver{% endblock %}
+{% block content %}
+
+<style>
+.page-header {
+    text-align: center;
+    margin-bottom: 28px;
+}
+.page-header p {
+    font-size: 14px;
+    color: var(--text-muted);
+    max-width: 500px;
+    margin: 8px auto 0;
+    line-height: 1.6;
+}
+
+.input-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 20px;
+}
+@media (max-width: 560px) {
+    .input-grid { grid-template-columns: 1fr; }
+}
+
+.input-section-label {
+    grid-column: 1 / -1;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    padding: 4px 0 8px;
+    border-top: 1px solid var(--border);
+    margin-top: 4px;
+}
+.input-section-label:first-child {
+    border-top: none;
+    margin-top: 0;
+}
+
+.input-full { grid-column: 1 / -1; }
+
+.input-wrap { position: relative; }
+.input-wrap input {
+    padding-right: 64px;
+    margin-bottom: 18px;
+}
+.input-suffix {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-60%);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-dim);
+    pointer-events: none;
+    font-family: var(--mono);
+}
+
+.formula-block {
+    background: #f0f4ff;
+    border: 1px solid #d4ddf7;
+    border-radius: var(--radius-md);
+    padding: 14px 20px;
+    margin-bottom: 16px;
+    font-family: var(--mono);
+    font-size: 15px;
+    color: var(--navy-mid);
+    text-align: center;
+    transition: var(--transition);
+}
+.formula-block:hover {
+    border-color: var(--navy-light);
+    background: #e8eeff;
+}
+
+.formula-legend {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1px;
+    background: #d4ddf7;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    margin-bottom: 24px;
+}
+.fl-cell {
+    background: #f8faff;
+    padding: 8px 12px;
+}
+.fl-cell .fl-sym {
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--navy-mid);
+    display: block;
+    margin-bottom: 2px;
+}
+.fl-cell .fl-desc {
+    font-family: var(--sans);
+    font-size: 11px;
+    color: var(--text-muted);
+    line-height: 1.4;
+}
+@media (max-width: 560px) {
+    .formula-legend { grid-template-columns: 1fr 1fr; }
+}
+
+.info-strip {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    margin-bottom: 24px;
+}
+.info-cell {
+    background: #fafbfe;
+    padding: 12px 14px;
+    text-align: center;
+}
+.info-cell .ic-label {
+    font-size: 11px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    font-weight: 600;
+    display: block;
+    margin-bottom: 3px;
+}
+.info-cell .ic-val {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-main);
+    font-family: var(--mono);
+}
+@media (max-width: 480px) {
+    .info-strip { grid-template-columns: 1fr; }
+}
+
+.result-card {
+    margin-top: 24px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    animation: slideUp 0.35s ease both;
+}
+.result-card-header {
+    background: var(--navy);
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.result-card-header span {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.55);
+}
+.result-card-body {
+    padding: 22px 24px;
+    background: #fff;
+}
+.result-value-row {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+.result-value-row .val {
+    font-size: 44px;
+    font-weight: 700;
+    color: var(--navy);
+    line-height: 1;
+    font-family: var(--mono);
+    letter-spacing: -1px;
+}
+.result-value-row .unit {
+    font-size: 16px;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.metrics-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+    gap: 10px;
+    margin-bottom: 16px;
+}
+.metric-block {
+    background: var(--surface, #f4f6fb);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+}
+.metric-block .mb-label {
+    font-size: 11px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+    display: block;
+    margin-bottom: 4px;
+}
+.metric-block .mb-val {
+    font-size: 17px;
+    font-weight: 700;
+    font-family: var(--mono);
+    color: var(--navy);
+}
+.metric-block .mb-sub {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
+.equation-trace {
+    background: #f0f4ff;
+    border: 1px solid #d4ddf7;
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--navy-mid);
+    margin-bottom: 16px;
+    line-height: 2;
+}
+
+.interpretation-box {
+    background: var(--surface, #f4f6fb);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.65;
+    border-left: 3px solid var(--accent);
+}
+</style>
+
+<!-- PAGE HEADER -->
+<div class="page-header">
+    <span class="badge">Recovery &amp; Timing</span>
+    <h1>Original Oil In Place <span style="font-size:15px;color:var(--text-muted);font-weight:400;">(OOIP)</span></h1>
+    <p>Volumetric estimate of the total stock-tank oil contained within a reservoir before any production begins.</p>
+</div>
+
+<!-- FORMULA -->
+<div class="formula-block">
+    N = (7758 &times; A &times; h &times; &phi; &times; (1 &minus; S<sub>w</sub>)) / B<sub>o</sub>
+</div>
+
+<!-- LEGEND -->
+<div class="formula-legend">
+    <div class="fl-cell">
+        <span class="fl-sym">7758</span>
+        <span class="fl-desc">Unit conversion (bbl/ac·ft)</span>
+    </div>
+    <div class="fl-cell">
+        <span class="fl-sym">A</span>
+        <span class="fl-desc">Drainage area (acres)</span>
+    </div>
+    <div class="fl-cell">
+        <span class="fl-sym">h</span>
+        <span class="fl-desc">Net pay thickness (ft)</span>
+    </div>
+    <div class="fl-cell">
+        <span class="fl-sym">&phi;</span>
+        <span class="fl-desc">Porosity (fraction)</span>
+    </div>
+    <div class="fl-cell">
+        <span class="fl-sym">S<sub>w</sub></span>
+        <span class="fl-desc">Water saturation (fraction)</span>
+    </div>
+    <div class="fl-cell">
+        <span class="fl-sym">B<sub>o</sub></span>
+        <span class="fl-desc">Oil FVF (RB/STB)</span>
+    </div>
+</div>
+
+<!-- CONTEXT STRIP -->
+<div class="info-strip">
+    <div class="info-cell">
+        <span class="ic-label">Constant</span>
+        <span class="ic-val">7758 bbl/ac·ft</span>
+    </div>
+    <div class="info-cell">
+        <span class="ic-label">Oil pore vol.</span>
+        <span class="ic-val">ϕ × (1 − S<sub>w</sub>)</span>
+    </div>
+    <div class="info-cell">
+        <span class="ic-label">Output</span>
+        <span class="ic-val">STB</span>
+    </div>
+</div>
+
+<!-- FORM -->
+<form method="POST">
+    {% csrf_token %}
+
+    <div class="input-grid">
+
+        <div class="input-section-label">Reservoir Geometry</div>
+
+        <div>
+            <label for="A">Drainage Area &mdash; A</label>
+            <div class="input-wrap">
+                <input type="number" step="any" name="A" id="A"
+                       placeholder="e.g. 640" required>
+                <span class="input-suffix">acres</span>
+            </div>
+        </div>
+
+        <div>
+            <label for="h">Net Pay Thickness &mdash; h</label>
+            <div class="input-wrap">
+                <input type="number" step="any" name="h" id="h"
+                       placeholder="e.g. 30" required>
+                <span class="input-suffix">ft</span>
+            </div>
+        </div>
+
+        <div class="input-section-label">Rock &amp; Fluid Properties</div>
+
+        <div>
+            <label for="phi">Porosity &mdash; &phi;</label>
+            <div class="input-wrap">
+                <input type="number" step="any" name="phi" id="phi"
+                       placeholder="e.g. 0.22" required>
+                <span class="input-suffix">frac</span>
+            </div>
+        </div>
+
+        <div>
+            <label for="Sw">Water Saturation &mdash; S<sub>w</sub></label>
+            <div class="input-wrap">
+                <input type="number" step="any" name="Sw" id="Sw"
+                       placeholder="e.g. 0.25" required>
+                <span class="input-suffix">frac</span>
+            </div>
+        </div>
+
+        <div class="input-full">
+            <label for="Bo">Oil Formation Volume Factor &mdash; B<sub>o</sub></label>
+            <div class="input-wrap">
+                <input type="number" step="any" name="Bo" id="Bo"
+                       placeholder="e.g. 1.25" required>
+                <span class="input-suffix">RB/STB</span>
+            </div>
+        </div>
+
+    </div>
+
+    <button type="submit">Calculate OOIP</button>
+</form>
+
+<!-- RESULT -->
+{% if result is not None %}
+
+<div class="result-card">
+    <div class="result-card-header">
+        <span>Result</span>
+        <span>Original Oil In Place &mdash; N</span>
+    </div>
+    <div class="result-card-body">
+
+        <div class="result-value-row">
+            <span class="val">{{ result|floatformat:2 }}</span>
+            <span class="unit">STB</span>
+        </div>
+
+        <div class="metrics-row">
+            <div class="metric-block">
+                <span class="mb-label">Area &mdash; A</span>
+                <span class="mb-val">{{ A|floatformat:1 }}</span>
+                <div class="mb-sub">acres</div>
+            </div>
+            <div class="metric-block">
+                <span class="mb-label">Thickness &mdash; h</span>
+                <span class="mb-val">{{ h|floatformat:1 }}</span>
+                <div class="mb-sub">ft</div>
+            </div>
+            <div class="metric-block">
+                <span class="mb-label">Porosity &mdash; &phi;</span>
+                <span class="mb-val">{{ phi|floatformat:3 }}</span>
+                <div class="mb-sub">fraction</div>
+            </div>
+            <div class="metric-block">
+                <span class="mb-label">S<sub>w</sub></span>
+                <span class="mb-val">{{ Sw|floatformat:3 }}</span>
+                <div class="mb-sub">fraction</div>
+            </div>
+            <div class="metric-block">
+                <span class="mb-label">B<sub>o</sub></span>
+                <span class="mb-val">{{ Bo|floatformat:4 }}</span>
+                <div class="mb-sub">RB/STB</div>
+            </div>
+        </div>
+
+        <div class="equation-trace">
+            N = (7758 &times; A &times; h &times; &phi; &times; (1 &minus; S<sub>w</sub>)) / B<sub>o</sub><br>
+            &nbsp;&nbsp;= (7758 &times; {{ A|floatformat:1 }} &times; {{ h|floatformat:1 }} &times; {{ phi|floatformat:3 }} &times; (1 &minus; {{ Sw|floatformat:3 }})) / {{ Bo|floatformat:4 }}<br>
+            &nbsp;&nbsp;= <strong>{{ result|floatformat:2 }} STB</strong>
+        </div>
+
+        {% if interpretation %}
+        <div class="interpretation-box">{{ interpretation }}</div>
+        {% endif %}
+
+    </div>
+</div>
+
+{% endif %}
+
+<a href="/" class="back">&#8592; Back to Dashboard</a>
+
+{% endblock %}

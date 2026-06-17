@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Fractional Flow Dual Plot
+{% endblock %}
+
+{% block content %}
+
+<div class="container">
+
+    <h1>Fractional Flow + Derivative Analysis</h1>
+
+    <div class="formula">
+        Plot Fw (left axis) and dfw/dSw (right axis) against Sw
+    </div>
+
+    <form method="POST">
+        {% csrf_token %}
+
+        <table style="width:100%; text-align:center;">
+            <tr>
+                <th>Index</th>
+                <th>Sw</th>
+                <th>Fw</th>
+                <th>dfw/dSw</th>
+            </tr>
+
+            {% for i in "123456789012345" %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td><input type="number" step="any" name="sw{{ forloop.counter }}" required></td>
+                <td><input type="number" step="any" name="fw{{ forloop.counter }}" required></td>
+                <td><input type="number" step="any" name="dfw{{ forloop.counter }}" required></td>
+            </tr>
+            {% endfor %}
+        </table>
+
+        <br>
+        <button type="submit">Generate Dual Plot</button>
+    </form>
+
+{% if plot_data %}
+
+<div class="result">
+
+    <h3>Fractional Flow Analysis</h3>
+
+    <canvas id="dualChart"></canvas>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+
+const chartData = {{ plot_data|safe }};
+
+const sw = chartData.map(item => item.Sw);
+const fw = chartData.map(item => item.Fw);
+const derivative = chartData.map(item => item.dfw_dSw);
+
+new Chart(document.getElementById('dualChart'), {
+
+    type: 'line',
+
+    data: {
+
+        labels: sw,
+
+        datasets: [
+
+            {
+                label: 'Fw',
+                data: fw,
+                yAxisID: 'y'
+            },
+
+            {
+                label: 'dfw/dSw',
+                data: derivative,
+                yAxisID: 'y1'
+            }
+
+        ]
+    },
+
+    options: {
+
+        responsive: true,
+
+        interaction: {
+            mode: 'index',
+            intersect: false
+        },
+
+        scales: {
+
+            x: {
+                title: {
+                    display: true,
+                    text: 'Water Saturation (Sw)'
+                }
+            },
+
+            y: {
+                position: 'left',
+                title: {
+                    display: true,
+                    text: 'Fractional Flow (Fw)'
+                }
+            },
+
+            y1: {
+                position: 'right',
+                title: {
+                    display: true,
+                    text: 'dfw/dSw'
+                },
+                grid: {
+                    drawOnChartArea: false
+                }
+            }
+        }
+    }
+
+});
+
+</script>
+
+{% endif %}
+
+    <a href="/">← Back to Dashboard</a>
+
+</div>
+
+{% endblock %}

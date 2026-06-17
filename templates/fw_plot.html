@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Fractional Flow vs Water Saturation
+{% endblock %}
+
+{% block content %}
+
+<div class="container">
+
+    <h1>Fractional Flow Curve (Fw vs Sw)</h1>
+
+    <div class="formula">
+        Plot Fractional Flow (Fw) against Water Saturation (Sw)
+    </div>
+
+    <form method="POST">
+        {% csrf_token %}
+
+        <table style="width:100%; text-align:center;">
+            <tr>
+                <th>Index</th>
+                <th>Sw</th>
+                <th>Fw</th>
+            </tr>
+
+            {% for i in "123456789012345" %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>
+                    <input type="number" step="any" name="sw{{ forloop.counter }}" required>
+                </td>
+                <td>
+                    <input type="number" step="any" name="fw{{ forloop.counter }}" required>
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+
+        <br>
+        <button type="submit">Generate Graph</button>
+    </form>
+
+    <a href="/">← Back to Dashboard</a>
+    
+{% if plot_data %}
+
+<div class="result">
+
+    <h3>Fractional Flow Curve</h3>
+
+    <canvas id="fwChart"></canvas>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+
+const chartData = {{ plot_data|safe }};
+
+const sw = chartData.map(item => item.Sw);
+const fw = chartData.map(item => item.Fw);
+
+new Chart(document.getElementById('fwChart'), {
+
+    type: 'line',
+
+    data: {
+        labels: sw,
+        datasets: [{
+            label: 'Fractional Flow (Fw)',
+            data: fw,
+            tension: 0.3
+        }]
+    },
+
+    options: {
+        responsive: true,
+        scales: {
+            x: {
+                title: {
+                    display: true,
+                    text: 'Water Saturation (Sw)'
+                }
+            },
+            y: {
+                title: {
+                    display: true,
+                    text: 'Fractional Flow (Fw)'
+                }
+            }
+        }
+    }
+
+});
+
+</script>
+
+{% endif %}
+
+</div>
+
+{% endblock %}

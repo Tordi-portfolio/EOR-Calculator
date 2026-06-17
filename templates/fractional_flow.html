@@ -1,0 +1,361 @@
+{% extends 'base.html' %}
+{% block title %}Fractional Flow (Buckley–Leverett) — EOR Solver{% endblock %}
+{% block content %}
+
+<style>
+.page-header {
+    text-align: center;
+    margin-bottom: 28px;
+}
+.page-header p {
+    font-size: 14px;
+    color: var(--text-muted);
+    max-width: 500px;
+    margin: 8px auto 0;
+    line-height: 1.6;
+}
+
+.input-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 20px;
+}
+@media (max-width: 560px) {
+    .input-grid { grid-template-columns: 1fr; }
+}
+
+/* section divider inside grid */
+.input-section-label {
+    grid-column: 1 / -1;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    padding: 4px 0 8px;
+    border-top: 1px solid var(--border);
+    margin-top: 4px;
+}
+.input-section-label:first-child {
+    border-top: none;
+    margin-top: 0;
+}
+
+.input-wrap {
+    position: relative;
+}
+.input-wrap input {
+    padding-right: 60px;
+    margin-bottom: 18px;
+}
+.input-suffix {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-60%);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-dim);
+    pointer-events: none;
+    font-family: var(--mono);
+}
+
+.info-strip {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    margin-bottom: 24px;
+}
+.info-cell {
+    background: #fafbfe;
+    padding: 12px 14px;
+    text-align: center;
+}
+.info-cell .ic-label {
+    font-size: 11px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    font-weight: 600;
+    display: block;
+    margin-bottom: 3px;
+}
+.info-cell .ic-val {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-main);
+    font-family: var(--mono);
+}
+@media (max-width: 480px) {
+    .info-strip { grid-template-columns: 1fr; }
+}
+
+.result-card {
+    margin-top: 24px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    animation: slideUp 0.35s ease both;
+}
+.result-card-header {
+    background: var(--navy);
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.result-card-header span {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.55);
+}
+.result-card-body {
+    padding: 22px 24px;
+    background: #fff;
+}
+.result-value-row {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+.result-value-row .val {
+    font-size: 44px;
+    font-weight: 700;
+    color: var(--navy);
+    line-height: 1;
+    font-family: var(--mono);
+    letter-spacing: -1px;
+}
+.result-value-row .unit {
+    font-size: 16px;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+/* split metric row */
+.metrics-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+.metric-block {
+    background: var(--surface, #f4f6fb);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+}
+.metric-block .mb-label {
+    font-size: 11px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+    display: block;
+    margin-bottom: 4px;
+}
+.metric-block .mb-val {
+    font-size: 20px;
+    font-weight: 700;
+    font-family: var(--mono);
+    color: var(--navy);
+}
+.metric-block .mb-sub {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+@media (max-width: 480px) {
+    .metrics-row { grid-template-columns: 1fr; }
+}
+
+.gauge-wrap { margin-bottom: 16px; }
+.gauge-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-bottom: 5px;
+    font-family: var(--mono);
+}
+.gauge-track {
+    height: 8px;
+    background: #edf0f7;
+    border-radius: 20px;
+    overflow: hidden;
+}
+.gauge-fill {
+    height: 100%;
+    border-radius: 20px;
+    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.interpretation-box {
+    background: var(--surface, #f4f6fb);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.65;
+    border-left: 3px solid var(--accent);
+}
+</style>
+
+<!-- PAGE HEADER -->
+<div class="page-header">
+    <span class="badge">Flow Analysis</span>
+    <h1>Fractional Flow <span style="font-size:15px; color:var(--text-muted); font-weight:400;">(Buckley–Leverett)</span></h1>
+    <p>Fraction of the total flowing stream that is water at reservoir conditions, governed by relative permeability and fluid viscosities.</p>
+</div>
+
+<!-- FORMULA -->
+<div class="formula">
+    f<sub>w</sub> = 1 / ( 1 + ( k<sub>ro</sub> &middot; &mu;<sub>w</sub> ) / ( k<sub>rw</sub> &middot; &mu;<sub>o</sub> ) )
+</div>
+
+<!-- CONTEXT STRIP -->
+<div class="info-strip">
+    <div class="info-cell">
+        <span class="ic-label">Output range</span>
+        <span class="ic-val">0 – 1</span>
+    </div>
+    <div class="info-cell">
+        <span class="ic-label">f<sub>w</sub> = 1</span>
+        <span class="ic-val">100% water cut</span>
+    </div>
+    <div class="info-cell">
+        <span class="ic-label">f<sub>w</sub> = 0</span>
+        <span class="ic-val">100% oil flow</span>
+    </div>
+</div>
+
+<!-- FORM -->
+<form method="POST">
+    {% csrf_token %}
+
+    <div class="input-grid">
+
+        <div class="input-section-label">Relative Permeability</div>
+
+        <div>
+            <label for="krw">Water Rel. Permeability &mdash; k<sub>rw</sub></label>
+            <div class="input-wrap">
+                <input type="number" step="any" name="krw" id="krw"
+                       placeholder="e.g. 0.30" required>
+                <span class="input-suffix">frac</span>
+            </div>
+        </div>
+
+        <div>
+            <label for="kro">Oil Rel. Permeability &mdash; k<sub>ro</sub></label>
+            <div class="input-wrap">
+                <input type="number" step="any" name="kro" id="kro"
+                       placeholder="e.g. 0.80" required>
+                <span class="input-suffix">frac</span>
+            </div>
+        </div>
+
+        <div class="input-section-label">Fluid Viscosities</div>
+
+        <div>
+            <label for="muw">Water Viscosity &mdash; &mu;<sub>w</sub></label>
+            <div class="input-wrap">
+                <input type="number" step="any" name="muw" id="muw"
+                       placeholder="e.g. 0.5" required>
+                <span class="input-suffix">cp</span>
+            </div>
+        </div>
+
+        <div>
+            <label for="muo">Oil Viscosity &mdash; &mu;<sub>o</sub></label>
+            <div class="input-wrap">
+                <input type="number" step="any" name="muo" id="muo"
+                       placeholder="e.g. 2.0" required>
+                <span class="input-suffix">cp</span>
+            </div>
+        </div>
+
+    </div>
+
+    <button type="submit">Calculate Fractional Flow</button>
+</form>
+
+<!-- RESULT -->
+{% if result is not None %}
+
+<div class="result-card">
+
+    <div class="result-card-header">
+        <span>Result</span>
+        <span>Fractional Flow — f<sub style="color:rgba(255,255,255,0.55)">w</sub></span>
+    </div>
+
+    <div class="result-card-body">
+
+        <div class="result-value-row">
+            <span class="val">{{ result|floatformat:4 }}</span>
+            <span class="unit">fraction</span>
+        </div>
+
+        <!-- derived metrics -->
+        <div class="metrics-row">
+            <div class="metric-block">
+                <span class="mb-label">Water cut</span>
+                <span class="mb-val">{{ result|floatformat:2 }}</span>
+                <div class="mb-sub">fraction of total stream</div>
+            </div>
+            <div class="metric-block">
+                <span class="mb-label">Oil fraction (1 − f<sub>w</sub>)</span>
+                {% with oil_frac=1|add:result %}
+                <span class="mb-val" id="oil-frac-display">—</span>
+                {% endwith %}
+                <div class="mb-sub">fraction of total stream</div>
+            </div>
+        </div>
+
+        <div class="gauge-wrap">
+            <div class="gauge-labels">
+                <span>0 (all oil)</span>
+                <span>0.25</span>
+                <span>0.50</span>
+                <span>0.75</span>
+                <span>1.0 (all water)</span>
+            </div>
+            <div class="gauge-track">
+                <div class="gauge-fill" id="gauge"
+                     style="width:0%; background:
+                        {% if result <= 0.3 %}var(--accent)
+                        {% elif result <= 0.6 %}#f59e0b
+                        {% else %}#ef4444{% endif %};">
+                </div>
+            </div>
+        </div>
+
+        {% if interpretation %}
+        <div class="interpretation-box">{{ interpretation }}</div>
+        {% endif %}
+
+    </div>
+</div>
+
+<script>
+window.addEventListener('DOMContentLoaded', function () {
+    var fw  = Math.min(Math.max({{ result }}, 0), 1);
+    var pct = (fw * 100).toFixed(1);
+    document.getElementById('gauge').style.width = pct + '%';
+    document.getElementById('oil-frac-display').textContent = (1 - fw).toFixed(4);
+});
+</script>
+
+{% endif %}
+
+<a href="/" class="back">&#8592; Back to Dashboard</a>
+
+{% endblock %}

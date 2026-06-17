@@ -1,0 +1,368 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard — EOR Solver{% endblock %}
+
+{% block content %}
+
+<style>
+/* ── HERO ── */
+.hero {
+    text-align: center;
+    padding: 12px 0 32px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 32px;
+}
+.hero h1 {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--navy);
+    margin-bottom: 10px;
+    letter-spacing: -0.4px;
+}
+.hero p {
+    font-size: 14px;
+    color: var(--text-muted);
+    max-width: 560px;
+    margin: 0 auto;
+    line-height: 1.7;
+}
+
+/* ── STAT ROW ── */
+.stat-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 32px;
+}
+.stat-block {
+    background: var(--surface, #f4f6fb);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 16px;
+    text-align: center;
+}
+.stat-block .s-num {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--navy);
+    font-family: var(--mono);
+    line-height: 1;
+    margin-bottom: 4px;
+}
+.stat-block .s-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+@media (max-width: 480px) {
+    .stat-row { grid-template-columns: 1fr; }
+}
+
+/* ── SECTION HEADING ── */
+.section-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+}
+.section-head h2 {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--text-muted);
+    margin: 0;
+}
+.section-head-line {
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+}
+
+/* ── CALC GRID ── */
+.calc-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    gap: 12px;
+    margin-bottom: 32px;
+}
+.calc-card {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    background: #fff;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 16px 14px;
+    text-decoration: none;
+    color: var(--text-main);
+    transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+    position: relative;
+    overflow: hidden;
+}
+.calc-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: var(--accent);
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+.calc-card:hover {
+    border-color: var(--navy-light);
+    box-shadow: 0 4px 16px rgba(11,46,110,0.08);
+    transform: translateY(-2px);
+}
+.calc-card:hover::before {
+    opacity: 1;
+}
+.calc-card-icon {
+    font-size: 20px;
+    margin-bottom: 4px;
+    line-height: 1;
+}
+.calc-card h4 {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-main);
+    line-height: 1.3;
+}
+.calc-card p {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.5;
+    margin: 0;
+}
+.calc-card .card-arrow {
+    margin-top: auto;
+    padding-top: 8px;
+    font-size: 12px;
+    color: var(--text-dim);
+    font-weight: 500;
+}
+
+/* ── ABOUT STRIP ── */
+.about-strip {
+    background: var(--surface, #f4f6fb);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 18px 20px;
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.7;
+}
+.about-strip strong {
+    color: var(--text-main);
+    font-weight: 600;
+}
+</style>
+
+<!-- HERO -->
+<div class="hero">
+    <span class="badge" style="margin-bottom:12px; display:inline-block;">Petroleum Engineering</span>
+    <h1>EOR Engineering Calculator Suite</h1>
+    <p>Professional tools for waterflood analysis, sweep efficiency, displacement performance, and reservoir volumetrics — built for engineers and researchers.</p>
+</div>
+
+<!-- STATS -->
+<div class="stat-row">
+    <div class="stat-block">
+        <div class="s-num">20+</div>
+        <div class="s-label">Calculators</div>
+    </div>
+    <div class="stat-block">
+        <div class="s-num">3</div>
+        <div class="s-label">EOR categories</div>
+    </div>
+    <div class="stat-block">
+        <div class="s-num">100%</div>
+        <div class="s-label">Engineering-grade</div>
+    </div>
+</div>
+
+<!-- SECTION: Sweep & Flow -->
+<div class="section-head">
+    <h2>Sweep &amp; Flow</h2>
+    <div class="section-head-line"></div>
+</div>
+
+<div class="calc-grid">
+
+    <a href="/mobility-ratio/" class="calc-card">
+        <div class="calc-card-icon">⚖</div>
+        <h4>Mobility Ratio</h4>
+        <p>Compare displacing to displaced fluid mobility.</p>
+        <span class="card-arrow">Calculate →</span>
+    </a>
+
+    <a href="/areal-sweep/" class="calc-card">
+        <div class="calc-card-icon">▦</div>
+        <h4>Areal Sweep Efficiency</h4>
+        <p>Fraction of reservoir area contacted by injected fluid.</p>
+        <span class="card-arrow">Calculate →</span>
+    </a>
+
+    <a href="/volumetric-sweep/" class="calc-card">
+        <div class="calc-card-icon">◈</div>
+        <h4>Volumetric Sweep</h4>
+        <p>3D sweep efficiency accounting for vertical heterogeneity.</p>
+        <span class="card-arrow">Calculate →</span>
+    </a>
+
+    <a href="/fractional-flow/" class="calc-card">
+        <div class="calc-card-icon">≈</div>
+        <h4>Fractional Flow</h4>
+        <p>Buckley–Leverett water fraction in total fluid stream.</p>
+        <span class="card-arrow">Calculate →</span>
+    </a>
+
+    <a href="/fw/" class="calc-card">
+        <div class="calc-card-icon">≈</div>
+        <h4>Fractional Flow (Alt)</h4>
+        <p>Alternative fractional flow formulation.</p>
+        <span class="card-arrow">Calculate →</span>
+    </a>
+
+    <a href="/fw-dual/" class="calc-card">
+        <div class="calc-card-icon">⇌</div>
+        <h4>Fractional Flow Dual</h4>
+        <p>Dual-phase fractional flow analysis.</p>
+        <span class="card-arrow">Calculate →</span>
+    </a>
+
+    <a href="/relperm/" class="calc-card">
+        <div class="calc-card-icon">∿</div>
+        <h4>Relative Permeability</h4>
+        <p>k<sub>rw</sub> and k<sub>ro</sub> from Corey correlations.</p>
+        <span class="card-arrow">Calculate →</span>
+    </a>
+
+</div>
+
+<!-- SECTION: Recovery & Timing -->
+<div class="section-head">
+    <h2>Recovery &amp; Timing</h2>
+    <div class="section-head-line"></div>
+</div>
+
+<div class="calc-grid">
+
+    <a href="/breakthrough-time/" class="calc-card">
+        <div class="calc-card-icon">⏱</div>
+        <h4>Breakthrough Time</h4>
+        <p>Time for injected water to reach a production well.</p>
+        <span class="card-arrow">Calculate →</span>
+    </a>
+
+    <a href="/recovery-factor/" class="calc-card">
+        <div class="calc-card-icon">⛽</div>
+        <h4>Recovery Factor</h4>
+        <p>Overall reservoir recovery efficiency estimate.</p>
+        <span class="card-arrow">Calculate →</span>
+    </a>
+
+    <a href="/ooip/" class="calc-card">
+        <div class="calc-card-icon">🛢</div>
+        <h4>OOIP</h4>
+        <p>Original oil in place from volumetric method.</p>
+        <span class="card-arrow">Calculate →</span>
+    </a>
+
+    <a href="/mmp/" class="calc-card">
+        <div class="calc-card-icon">💨</div>
+        <h4>MMP (CO₂)</h4>
+        <p>Minimum miscibility pressure for CO₂ injection.</p>
+        <span class="card-arrow">Calculate →</span>
+    </a>
+
+    <a href="/edbt/" class="calc-card">
+        <div class="calc-card-icon">⊗</div>
+        <h4>EDBT</h4>
+        <p>Displacement efficiency at breakthrough.</p>
+        <span class="card-arrow">Calculate →</span>
+    </a>
+
+    <a href="/eabt/" class="calc-card">
+        <div class="calc-card-icon">⊕</div>
+        <h4>EADT</h4>
+        <p>Areal sweep efficiency at breakthrough.</p>
+        <span class="card-arrow">Calculate →</span>
+    </a>
+
+</div>
+
+<!-- SECTION: Parameters -->
+<div class="section-head">
+    <h2>Parameters &amp; Tools</h2>
+    <div class="section-head-line"></div>
+</div>
+
+<div class="calc-grid">
+
+    <a href="/tbt/" class="calc-card">
+        <div class="calc-card-icon">τ</div>
+        <h4>TBT</h4>
+        <p>Dimensionless breakthrough time calculation.</p>
+        <span class="card-arrow">Calculate →</span>
+    </a>
+
+    <a href="/npbt/" class="calc-card">
+        <div class="calc-card-icon">Nₚ</div>
+        <h4>NPBT</h4>
+        <p>Cumulative oil production at breakthrough.</p>
+        <span class="card-arrow">Calculate →</span>
+    </a>
+
+    <a href="/wibt/" class="calc-card">
+        <div class="calc-card-icon">Wᵢ</div>
+        <h4>WIBT</h4>
+        <p>Cumulative water injection at breakthrough.</p>
+        <span class="card-arrow">Calculate →</span>
+    </a>
+
+    <a href="/qibt/" class="calc-card">
+        <div class="calc-card-icon">qᵢ</div>
+        <h4>QIBT</h4>
+        <p>Injection rate required at breakthrough.</p>
+        <span class="card-arrow">Calculate →</span>
+    </a>
+
+    <a href="/ns/" class="calc-card">
+        <div class="calc-card-icon">Nₛ</div>
+        <h4>Ns</h4>
+        <p>Stability number for miscible flood analysis.</p>
+        <span class="card-arrow">Calculate →</span>
+    </a>
+
+    <a href="/pv/" class="calc-card">
+        <div class="calc-card-icon">◻</div>
+        <h4>Pore Volume</h4>
+        <p>Total pore volume from reservoir geometry.</p>
+        <span class="card-arrow">Calculate →</span>
+    </a>
+
+    <a href="/slope/" class="calc-card">
+        <div class="calc-card-icon">∠</div>
+        <h4>Slope</h4>
+        <p>Slope from fractional flow curve analysis.</p>
+        <span class="card-arrow">Calculate →</span>
+    </a>
+
+    <a href="/unit-converter/" class="calc-card">
+        <div class="calc-card-icon">⇄</div>
+        <h4>Unit Converter</h4>
+        <p>Convert between common petroleum engineering units.</p>
+        <span class="card-arrow">Calculate →</span>
+    </a>
+
+</div>
+
+<!-- ABOUT -->
+<div class="about-strip">
+    <strong>About this suite —</strong>
+    EOR Solver provides petroleum engineering calculators for reservoir volumetrics, waterflood performance, breakthrough prediction, mobility evaluation, and fractional flow analysis. Designed for <strong>students, researchers, and industry professionals</strong> performing accurate EOR and reservoir performance calculations.
+</div>
+
+{% endblock %}

@@ -1,0 +1,386 @@
+{% extends 'base.html' %}
+{% block title %}Pore Volume (PV) — EOR Solver{% endblock %}
+{% block content %}
+
+<style>
+.page-header {
+    text-align: center;
+    margin-bottom: 28px;
+}
+.page-header p {
+    font-size: 14px;
+    color: var(--text-muted);
+    max-width: 500px;
+    margin: 8px auto 0;
+    line-height: 1.6;
+}
+
+.input-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 20px;
+}
+@media (max-width: 560px) {
+    .input-grid { grid-template-columns: 1fr; }
+}
+
+.input-section-label {
+    grid-column: 1 / -1;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    padding: 4px 0 8px;
+    border-top: 1px solid var(--border);
+    margin-top: 4px;
+}
+.input-section-label:first-child {
+    border-top: none;
+    margin-top: 0;
+}
+
+.input-full { grid-column: 1 / -1; }
+
+.input-wrap { position: relative; }
+.input-wrap input {
+    padding-right: 64px;
+    margin-bottom: 18px;
+}
+.input-suffix {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-60%);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-dim);
+    pointer-events: none;
+    font-family: var(--mono);
+}
+
+.formula-block {
+    background: #f0f4ff;
+    border: 1px solid #d4ddf7;
+    border-radius: var(--radius-md);
+    padding: 14px 20px;
+    margin-bottom: 16px;
+    font-family: var(--mono);
+    font-size: 15px;
+    color: var(--navy-mid);
+    text-align: center;
+    transition: var(--transition);
+}
+.formula-block:hover {
+    border-color: var(--navy-light);
+    background: #e8eeff;
+}
+
+.formula-legend {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: #d4ddf7;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    margin-bottom: 24px;
+}
+.fl-cell {
+    background: #f8faff;
+    padding: 8px 12px;
+}
+.fl-cell .fl-sym {
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--navy-mid);
+    display: block;
+    margin-bottom: 2px;
+}
+.fl-cell .fl-desc {
+    font-family: var(--sans);
+    font-size: 11px;
+    color: var(--text-muted);
+    line-height: 1.4;
+}
+
+.info-strip {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    margin-bottom: 24px;
+}
+.info-cell {
+    background: #fafbfe;
+    padding: 12px 14px;
+    text-align: center;
+}
+.info-cell .ic-label {
+    font-size: 11px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    font-weight: 600;
+    display: block;
+    margin-bottom: 3px;
+}
+.info-cell .ic-val {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-main);
+    font-family: var(--mono);
+}
+@media (max-width: 480px) {
+    .info-strip { grid-template-columns: 1fr; }
+    .formula-legend { grid-template-columns: 1fr; }
+}
+
+.result-card {
+    margin-top: 24px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    animation: slideUp 0.35s ease both;
+}
+.result-card-header {
+    background: var(--navy);
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.result-card-header span {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.55);
+}
+.result-card-body {
+    padding: 22px 24px;
+    background: #fff;
+}
+.result-value-row {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+.result-value-row .val {
+    font-size: 44px;
+    font-weight: 700;
+    color: var(--navy);
+    line-height: 1;
+    font-family: var(--mono);
+    letter-spacing: -1px;
+}
+.result-value-row .unit {
+    font-size: 16px;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.metrics-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+.metric-block {
+    background: var(--surface, #f4f6fb);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+}
+.metric-block .mb-label {
+    font-size: 11px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+    display: block;
+    margin-bottom: 4px;
+}
+.metric-block .mb-val {
+    font-size: 18px;
+    font-weight: 700;
+    font-family: var(--mono);
+    color: var(--navy);
+}
+.metric-block .mb-sub {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+@media (max-width: 480px) {
+    .metrics-row { grid-template-columns: 1fr; }
+}
+
+.equation-trace {
+    background: #f0f4ff;
+    border: 1px solid #d4ddf7;
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--navy-mid);
+    margin-bottom: 16px;
+    line-height: 2;
+}
+
+.interpretation-box {
+    background: var(--surface, #f4f6fb);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.65;
+    border-left: 3px solid var(--accent);
+}
+</style>
+
+<!-- PAGE HEADER -->
+<div class="page-header">
+    <span class="badge">Parameters</span>
+    <h1>Pore Volume <span style="font-size:15px;color:var(--text-muted);font-weight:400;">(PV)</span></h1>
+    <p>Total void space within a reservoir rock available to store fluids, expressed in reservoir barrel units.</p>
+</div>
+
+<!-- FORMULA -->
+<div class="formula-block">
+    PV = (&phi; &times; A &times; L) / 5.615
+</div>
+
+<!-- LEGEND -->
+<div class="formula-legend">
+    <div class="fl-cell">
+        <span class="fl-sym">&phi;</span>
+        <span class="fl-desc">Porosity (fraction)</span>
+    </div>
+    <div class="fl-cell">
+        <span class="fl-sym">A</span>
+        <span class="fl-desc">Cross-sectional area (ft²)</span>
+    </div>
+    <div class="fl-cell">
+        <span class="fl-sym">L</span>
+        <span class="fl-desc">Reservoir length / thickness (ft)</span>
+    </div>
+    <div class="fl-cell">
+        <span class="fl-sym">5.615</span>
+        <span class="fl-desc">Conversion factor (ft³ → bbl)</span>
+    </div>
+</div>
+
+<!-- CONTEXT STRIP -->
+<div class="info-strip">
+    <div class="info-cell">
+        <span class="ic-label">Conversion</span>
+        <span class="ic-val">5.615 ft³/bbl</span>
+    </div>
+    <div class="info-cell">
+        <span class="ic-label">Bulk volume</span>
+        <span class="ic-val">A &times; L</span>
+    </div>
+    <div class="info-cell">
+        <span class="ic-label">Output</span>
+        <span class="ic-val">RB</span>
+    </div>
+</div>
+
+<!-- FORM -->
+<form method="POST">
+    {% csrf_token %}
+
+    <div class="input-grid">
+
+        <div class="input-section-label">Rock Properties</div>
+
+        <div class="input-full">
+            <label for="phi">Porosity &mdash; &phi;</label>
+            <div class="input-wrap">
+                <input type="number" step="any" name="phi" id="phi"
+                       placeholder="e.g. 0.22" required>
+                <span class="input-suffix">frac</span>
+            </div>
+        </div>
+
+        <div class="input-section-label">Reservoir Geometry</div>
+
+        <div>
+            <label for="A">Cross-sectional Area &mdash; A</label>
+            <div class="input-wrap">
+                <input type="number" step="any" name="A" id="A"
+                       placeholder="e.g. 43560" required>
+                <span class="input-suffix">ft²</span>
+            </div>
+        </div>
+
+        <div>
+            <label for="L">Length / Thickness &mdash; L</label>
+            <div class="input-wrap">
+                <input type="number" step="any" name="L" id="L"
+                       placeholder="e.g. 50" required>
+                <span class="input-suffix">ft</span>
+            </div>
+        </div>
+
+    </div>
+
+    <button type="submit">Calculate PV</button>
+</form>
+
+<!-- RESULT -->
+{% if result is not None %}
+
+<div class="result-card">
+    <div class="result-card-header">
+        <span>Result</span>
+        <span>Pore Volume &mdash; PV</span>
+    </div>
+    <div class="result-card-body">
+
+        <div class="result-value-row">
+            <span class="val">{{ result|floatformat:2 }}</span>
+            <span class="unit">RB</span>
+        </div>
+
+        <div class="metrics-row">
+            <div class="metric-block">
+                <span class="mb-label">Porosity &mdash; &phi;</span>
+                <span class="mb-val">{{ phi|floatformat:4 }}</span>
+                <div class="mb-sub">fraction</div>
+            </div>
+            <div class="metric-block">
+                <span class="mb-label">Area &mdash; A</span>
+                <span class="mb-val">{{ A|floatformat:1 }}</span>
+                <div class="mb-sub">ft²</div>
+            </div>
+            <div class="metric-block">
+                <span class="mb-label">Length &mdash; L</span>
+                <span class="mb-val">{{ L|floatformat:1 }}</span>
+                <div class="mb-sub">ft</div>
+            </div>
+        </div>
+
+        <div class="equation-trace">
+            PV = (&phi; &times; A &times; L) / 5.615<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;= ({{ phi|floatformat:4 }} &times; {{ A|floatformat:1 }} &times; {{ L|floatformat:1 }}) / 5.615<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;= <strong>{{ result|floatformat:2 }} RB</strong>
+        </div>
+
+        {% if interpretation %}
+        <div class="interpretation-box">{{ interpretation }}</div>
+        {% endif %}
+
+    </div>
+</div>
+
+{% endif %}
+
+<a href="/" class="back">&#8592; Back to Dashboard</a>
+
+{% endblock %}
