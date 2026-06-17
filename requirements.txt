@@ -5,6 +5,7 @@ Django==6.0.6
 flexcache==0.3
 flexparser==0.4
 fonttools==4.63.0
+gunicorn==26.0.0
 kiwisolver==1.5.0
 matplotlib==3.10.9
 numpy==2.4.6
