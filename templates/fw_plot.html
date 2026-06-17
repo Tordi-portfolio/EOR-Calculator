@@ -1,104 +1,363 @@
 {% extends 'base.html' %}
-
-{% block title %}
-Fractional Flow vs Water Saturation
-{% endblock %}
-
+{% block title %}Fractional Flow Curve (Fw vs Sw) — EOR Solver{% endblock %}
 {% block content %}
 
-<div class="container">
+<style>
+.page-header {
+    text-align: center;
+    margin-bottom: 28px;
+}
+.page-header p {
+    font-size: 14px;
+    color: var(--text-muted);
+    max-width: 500px;
+    margin: 8px auto 0;
+    line-height: 1.6;
+}
 
-    <h1>Fractional Flow Curve (Fw vs Sw)</h1>
+.info-strip {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    margin-bottom: 24px;
+}
+.info-cell {
+    background: #fafbfe;
+    padding: 12px 14px;
+    text-align: center;
+}
+.info-cell .ic-label {
+    font-size: 11px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    font-weight: 600;
+    display: block;
+    margin-bottom: 3px;
+}
+.info-cell .ic-val {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-main);
+    font-family: var(--mono);
+}
+@media (max-width: 480px) {
+    .info-strip { grid-template-columns: 1fr; }
+}
 
-    <div class="formula">
-        Plot Fractional Flow (Fw) against Water Saturation (Sw)
+/* ── DATA ENTRY TABLE ── */
+.data-table-wrap {
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    margin-bottom: 20px;
+}
+.data-table-scroll {
+    max-height: 420px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+}
+table.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+table.data-table thead th {
+    position: sticky;
+    top: 0;
+    background: var(--navy);
+    color: rgba(255,255,255,0.85);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    padding: 10px 12px;
+    text-align: center;
+    z-index: 2;
+}
+table.data-table thead th:first-child {
+    width: 56px;
+}
+table.data-table tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: var(--transition);
+}
+table.data-table tbody tr:last-child {
+    border-bottom: none;
+}
+table.data-table tbody tr:hover {
+    background: var(--accent-dim);
+}
+table.data-table tbody td {
+    padding: 6px 10px;
+    text-align: center;
+}
+table.data-table tbody td.idx-cell {
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-dim);
+    background: #fafbfe;
+}
+table.data-table tbody td input {
+    margin-bottom: 0;
+    padding: 8px 10px;
+    text-align: center;
+    font-family: var(--mono);
+    font-size: 13px;
+    border-radius: var(--radius-sm);
+}
+
+.table-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+}
+.table-toolbar span {
+    font-size: 11px;
+    color: var(--text-dim);
+    font-weight: 500;
+}
+.fill-zero-btn {
+    width: auto;
+    padding: 6px 12px;
+    font-size: 11px;
+    font-weight: 600;
+    background: rgba(255,255,255,0.9);
+    color: var(--navy-mid);
+    border: 1.5px solid var(--border);
+}
+.fill-zero-btn:hover {
+    background: #fff;
+    border-color: var(--navy-light);
+    transform: none;
+}
+
+/* ── RESULT / CHART CARD ── */
+.result-card {
+    margin-top: 24px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    animation: slideUp 0.35s ease both;
+}
+.result-card-header {
+    background: var(--navy);
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.result-card-header span {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.55);
+}
+.result-card-body {
+    padding: 24px;
+    background: #fff;
+}
+.chart-frame {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 16px;
+}
+
+.status-pill {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+    letter-spacing: 0.3px;
+    margin-bottom: 14px;
+}
+.status-unit { background: rgba(26,82,184,0.10); color: var(--navy-mid); }
+</style>
+
+<!-- PAGE HEADER -->
+<div class="page-header">
+    <span class="badge">Sweep & Flow</span>
+    <h1>Fractional Flow Curve <span style="font-size:15px; color:var(--text-muted); font-weight:400;">(F<sub>w</sub> vs S<sub>w</sub>)</span></h1>
+    <p>Plots the fraction of water flowing at the producing end of the reservoir against water saturation, used to evaluate displacement efficiency.</p>
+</div>
+
+<!-- FORMULA -->
+<div class="formula">
+    F<sub>w</sub> = f(S<sub>w</sub>) &nbsp;&mdash;&nbsp; plotted point-by-point from tabulated data
+</div>
+
+<!-- CONTEXT STRIP -->
+<div class="info-strip">
+    <div class="info-cell">
+        <span class="ic-label">Data Points</span>
+        <span class="ic-val">15 max</span>
+    </div>
+    <div class="info-cell">
+        <span class="ic-label">X-Axis</span>
+        <span class="ic-val">S<sub>w</sub> (frac)</span>
+    </div>
+    <div class="info-cell">
+        <span class="ic-label">Y-Axis</span>
+        <span class="ic-val">F<sub>w</sub> (frac)</span>
+    </div>
+</div>
+
+<!-- FORM -->
+<form method="POST">
+    {% csrf_token %}
+
+    <div class="data-table-wrap">
+        <div class="data-table-scroll">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>S<sub>w</sub></th>
+                        <th>F<sub>w</sub></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for i in "123456789012345" %}
+                    <tr>
+                        <td class="idx-cell">{{ forloop.counter }}</td>
+                        <td>
+                            <input type="number" step="any" name="sw{{ forloop.counter }}" placeholder="0.000" required>
+                        </td>
+                        <td>
+                            <input type="number" step="any" name="fw{{ forloop.counter }}" placeholder="0.000" required>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="table-toolbar">
+            <span>Enter S<sub>w</sub> / F<sub>w</sub> pairs in ascending saturation order</span>
+        </div>
     </div>
 
-    <form method="POST">
-        {% csrf_token %}
+    <button type="submit">Generate Graph</button>
+</form>
 
-        <table style="width:100%; text-align:center;">
-            <tr>
-                <th>Index</th>
-                <th>Sw</th>
-                <th>Fw</th>
-            </tr>
-
-            {% for i in "123456789012345" %}
-            <tr>
-                <td>{{ forloop.counter }}</td>
-                <td>
-                    <input type="number" step="any" name="sw{{ forloop.counter }}" required>
-                </td>
-                <td>
-                    <input type="number" step="any" name="fw{{ forloop.counter }}" required>
-                </td>
-            </tr>
-            {% endfor %}
-        </table>
-
-        <br>
-        <button type="submit">Generate Graph</button>
-    </form>
-
-    <a href="/">← Back to Dashboard</a>
-    
+<!-- RESULT -->
 {% if plot_data %}
 
-<div class="result">
+<div class="result-card">
 
-    <h3>Fractional Flow Curve</h3>
+    <div class="result-card-header">
+        <span>Result</span>
+        <span>Fractional Flow Curve</span>
+    </div>
 
-    <canvas id="fwChart"></canvas>
+    <div class="result-card-body">
 
+        <span class="status-pill status-unit">Plotted &mdash; F<sub>w</sub> vs S<sub>w</sub></span>
+
+        <div class="chart-frame">
+            <canvas id="fwChart"></canvas>
+        </div>
+
+    </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
+window.addEventListener('DOMContentLoaded', function () {
 
-const chartData = {{ plot_data|safe }};
+    const chartData = {{ plot_data|safe }};
 
-const sw = chartData.map(item => item.Sw);
-const fw = chartData.map(item => item.Fw);
+    const sw = chartData.map(item => item.Sw);
+    const fw = chartData.map(item => item.Fw);
 
-new Chart(document.getElementById('fwChart'), {
+    const navy   = '#0b2e6e';
+    const accent = '#00c2a8';
 
-    type: 'line',
+    new Chart(document.getElementById('fwChart'), {
 
-    data: {
-        labels: sw,
-        datasets: [{
-            label: 'Fractional Flow (Fw)',
-            data: fw,
-            tension: 0.3
-        }]
-    },
+        type: 'line',
 
-    options: {
-        responsive: true,
-        scales: {
-            x: {
-                title: {
-                    display: true,
-                    text: 'Water Saturation (Sw)'
+        data: {
+            labels: sw,
+            datasets: [{
+                label: 'Fractional Flow (Fw)',
+                data: fw,
+                tension: 0.3,
+                borderColor: navy,
+                backgroundColor: 'rgba(0,194,168,0.12)',
+                pointBackgroundColor: accent,
+                pointBorderColor: navy,
+                pointRadius: 4,
+                pointHoverRadius: 6,
+                borderWidth: 2.5,
+                fill: true
+            }]
+        },
+
+        options: {
+            responsive: true,
+            interaction: {
+                mode: 'nearest',
+                intersect: false
+            },
+            plugins: {
+                legend: {
+                    labels: {
+                        font: { family: "'Inter', sans-serif", size: 12, weight: '600' },
+                        color: '#0f1c33'
+                    }
+                },
+                tooltip: {
+                    backgroundColor: navy,
+                    titleFont: { family: "'JetBrains Mono', monospace" },
+                    bodyFont: { family: "'JetBrains Mono', monospace" },
+                    padding: 10,
+                    cornerRadius: 6
                 }
             },
-            y: {
-                title: {
-                    display: true,
-                    text: 'Fractional Flow (Fw)'
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Water Saturation (Sw)',
+                        font: { family: "'Inter', sans-serif", size: 12, weight: '600' },
+                        color: '#5a6c8a'
+                    },
+                    grid: { color: '#dce3f0' },
+                    ticks: { font: { family: "'JetBrains Mono', monospace" }, color: '#8fa0bc' }
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Fractional Flow (Fw)',
+                        font: { family: "'Inter', sans-serif", size: 12, weight: '600' },
+                        color: '#5a6c8a'
+                    },
+                    grid: { color: '#dce3f0' },
+                    ticks: { font: { family: "'JetBrains Mono', monospace" }, color: '#8fa0bc' }
                 }
             }
         }
-    }
+
+    });
 
 });
-
 </script>
 
 {% endif %}
 
-</div>
+<a href="/" class="back">&#8592; Back to Dashboard</a>
 
 {% endblock %}

@@ -1,90 +1,424 @@
 {% extends 'base.html' %}
-
-{% block title %}
-Water Injected at Breakthrough (Wibt)
-{% endblock %}
-
+{% block title %}Water Injected at Breakthrough (WIBT) — EOR Solver{% endblock %}
 {% block content %}
 
-<div class="container">
+<style>
+.page-header {
+    text-align: center;
+    margin-bottom: 28px;
+}
+.page-header p {
+    font-size: 14px;
+    color: var(--text-muted);
+    max-width: 500px;
+    margin: 8px auto 0;
+    line-height: 1.6;
+}
 
-    <h1>Water Injected at Breakthrough</h1>
+/* ── MODEL FORMULA TABS ── */
+.formula-tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    margin-bottom: 16px;
+}
+.formula-tab {
+    background: #f0f4ff;
+    padding: 14px 16px;
+    text-align: center;
+    transition: var(--transition);
+}
+.formula-tab.active {
+    background: #e8eeff;
+}
+.formula-tab .ft-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+    display: block;
+}
+.formula-tab .ft-formula {
+    font-family: var(--mono);
+    font-size: 14px;
+    color: var(--navy-mid);
+}
 
-    <div class="formula">
+.legend-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 14px 18px;
+    margin-bottom: 24px;
+    font-size: 13px;
+    color: var(--text-muted);
+}
+.legend-row {
+    display: flex;
+    gap: 8px;
+    padding: 4px 0;
+}
+.legend-row .lg-term {
+    font-family: var(--mono);
+    font-weight: 600;
+    color: var(--navy);
+    min-width: 50px;
+    flex-shrink: 0;
+}
 
-        <h3>Model 1: Saturation-Based</h3>
+/* ── MODEL SELECTOR (pill toggle) ── */
+.model-select-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+    display: block;
+}
+.model-pills {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+.model-pill {
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 12px 14px;
+    cursor: pointer;
+    transition: var(--transition);
+    background: #fafbfe;
+    text-align: center;
+}
+.model-pill:hover {
+    border-color: var(--navy-light);
+}
+.model-pill.selected {
+    border-color: var(--navy-light);
+    background: var(--accent-dim);
+}
+.model-pill .mp-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-main);
+    margin-bottom: 2px;
+}
+.model-pill .mp-sub {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-family: var(--mono);
+}
+@media (max-width: 560px) {
+    .model-pills { grid-template-columns: 1fr; }
+}
 
-        W<sub>ibt</sub> = PV × (S<sub>wf</sub> − S<sub>wi</sub>)
+.input-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 20px;
+}
+@media (max-width: 560px) {
+    .input-grid { grid-template-columns: 1fr; }
+}
 
-        <hr>
+.input-section-label {
+    grid-column: 1 / -1;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    padding: 4px 0 8px;
+    border-top: 1px solid var(--border);
+    margin-top: 4px;
+}
+.input-section-label:first-child {
+    border-top: none;
+    margin-top: 0;
+}
 
-        <h3>Model 2: Injection-Based</h3>
+.input-wrap {
+    position: relative;
+}
+.input-wrap input {
+    padding-right: 60px;
+    margin-bottom: 18px;
+}
+.input-suffix {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-60%);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-dim);
+    pointer-events: none;
+    font-family: var(--mono);
+}
 
-        W<sub>ibt</sub> = PV × Q<sub>ibt</sub>
+.model-fields {
+    display: none;
+}
+.model-fields.active {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 20px;
+}
+@media (max-width: 560px) {
+    .model-fields.active { grid-template-columns: 1fr; }
+}
 
-        <hr>
+.result-card {
+    margin-top: 24px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    animation: slideUp 0.35s ease both;
+}
+.result-card-header {
+    background: var(--navy);
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.result-card-header span {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.55);
+}
+.result-card-body {
+    padding: 22px 24px;
+    background: #fff;
+}
+.result-value-row {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+.result-value-row .val {
+    font-size: 44px;
+    font-weight: 700;
+    color: var(--navy);
+    line-height: 1;
+    font-family: var(--mono);
+    letter-spacing: -1px;
+}
+.result-value-row .unit {
+    font-size: 16px;
+    color: var(--text-muted);
+    font-weight: 500;
+}
 
-        <p><strong>Where:</strong></p>
+.metrics-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+.metric-block {
+    background: var(--surface, #f4f6fb);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+}
+.metric-block .mb-label {
+    font-size: 11px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+    display: block;
+    margin-bottom: 4px;
+}
+.metric-block .mb-val {
+    font-size: 20px;
+    font-weight: 700;
+    font-family: var(--mono);
+    color: var(--navy);
+}
+.metric-block .mb-sub {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+@media (max-width: 480px) {
+    .metrics-row { grid-template-columns: 1fr; }
+}
 
-        <p>PV = Pore Volume</p>
-        <p>Swf = Final Water Saturation at Breakthrough</p>
-        <p>Swi = Initial Water Saturation</p>
-        <p>Qibt = Injection Rate at Breakthrough</p>
+.interpretation-box {
+    background: var(--surface, #f4f6fb);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.65;
+    border-left: 3px solid var(--accent);
+}
 
-    </div>
+.status-pill {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+    letter-spacing: 0.3px;
+    margin-bottom: 12px;
+}
+.status-unit { background: rgba(26,82,184,0.10); color: var(--navy-mid); }
+</style>
 
-    <!-- FORM -->
-    <form method="POST">
-        {% csrf_token %}
-
-        <label>Select Model</label>
-        <select name="model" id="model" onchange="toggleInputs()" required>
-            <option value="">-- Select --</option>
-            <option value="sat">Saturation Model</option>
-            <option value="inj">Injection Model</option>
-        </select>
-
-        <hr>
-
-        <label>Pore Volume (PV)</label>
-        <input type="number" step="any" name="PV" required>
-
-        <!-- MODEL 1 -->
-        <div id="satModel" style="display:none;">
-            <label>Final Water Saturation (Swf)</label>
-            <input type="number" step="any" name="Swf">
-
-            <label>Initial Water Saturation (Swi)</label>
-            <input type="number" step="any" name="Swi">
-        </div>
-
-        <!-- MODEL 2 -->
-        <div id="injModel" style="display:none;">
-            <label>Injection Rate at Breakthrough (Qibt)</label>
-            <input type="number" step="any" name="Qibt">
-        </div>
-
-        <button type="submit">Calculate Wibt</button>
-    </form>
-
-    {% if result is not None %}
-    <div class="result">
-        <h3>Wibt = {{ result|floatformat:2 }}</h3>
-        <p>{{ interpretation }}</p>
-    </div>
-    {% endif %}
-
-    <a class="back" href="/">← Back to Dashboard</a>
-
+<!-- PAGE HEADER -->
+<div class="page-header">
+    <span class="badge">Recovery & Timing</span>
+    <h1>Water Injected at Breakthrough <span style="font-size:15px; color:var(--text-muted); font-weight:400;">(W<sub>ibt</sub>)</span></h1>
+    <p>Cumulative volume of water injected into the reservoir at the moment water breakthrough occurs at the producing well.</p>
 </div>
+
+<!-- FORMULA TABS -->
+<div class="formula-tabs">
+    <div class="formula-tab" id="tabSat">
+        <span class="ft-label">Model 1 — Saturation</span>
+        <span class="ft-formula">W<sub>ibt</sub> = PV &times; (S<sub>wf</sub> &minus; S<sub>wi</sub>)</span>
+    </div>
+    <div class="formula-tab" id="tabInj">
+        <span class="ft-label">Model 2 — Injection</span>
+        <span class="ft-formula">W<sub>ibt</sub> = PV &times; Q<sub>ibt</sub></span>
+    </div>
+</div>
+
+<!-- LEGEND -->
+<div class="legend-box">
+    <div class="legend-row"><span class="lg-term">PV</span><span>Pore Volume</span></div>
+    <div class="legend-row"><span class="lg-term">S<sub>wf</sub></span><span>Final water saturation at breakthrough</span></div>
+    <div class="legend-row"><span class="lg-term">S<sub>wi</sub></span><span>Initial water saturation</span></div>
+    <div class="legend-row"><span class="lg-term">Q<sub>ibt</sub></span><span>Injection rate at breakthrough</span></div>
+</div>
+
+<!-- FORM -->
+<form method="POST">
+    {% csrf_token %}
+
+    <span class="model-select-label">Select Model</span>
+    <select name="model" id="model" onchange="toggleInputs()" required style="margin-bottom: 20px;">
+        <option value="">-- Select --</option>
+        <option value="sat">Saturation Model</option>
+        <option value="inj">Injection Model</option>
+    </select>
+
+    <div class="input-section-label">Reservoir Parameter</div>
+    <div class="input-grid">
+        <div>
+            <label for="PV">Pore Volume &mdash; PV</label>
+            <div class="input-wrap">
+                <input type="number" step="any" name="PV" id="PV"
+                       placeholder="e.g. 1500000" required>
+                <span class="input-suffix">bbl</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODEL 1 -->
+    <div id="satModel" class="model-fields">
+        <div class="input-section-label" style="grid-column: 1 / -1;">Saturation Inputs</div>
+        <div>
+            <label for="Swf">Final Water Saturation &mdash; S<sub>wf</sub></label>
+            <div class="input-wrap">
+                <input type="number" step="any" name="Swf" id="Swf" placeholder="e.g. 0.65">
+                <span class="input-suffix">frac</span>
+            </div>
+        </div>
+        <div>
+            <label for="Swi">Initial Water Saturation &mdash; S<sub>wi</sub></label>
+            <div class="input-wrap">
+                <input type="number" step="any" name="Swi" id="Swi" placeholder="e.g. 0.20">
+                <span class="input-suffix">frac</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODEL 2 -->
+    <div id="injModel" class="model-fields">
+        <div class="input-section-label" style="grid-column: 1 / -1;">Injection Inputs</div>
+        <div>
+            <label for="Qibt">Injection Rate at Breakthrough &mdash; Q<sub>ibt</sub></label>
+            <div class="input-wrap">
+                <input type="number" step="any" name="Qibt" id="Qibt" placeholder="e.g. 0.85">
+                <span class="input-suffix">frac</span>
+            </div>
+        </div>
+    </div>
+
+    <button type="submit">Calculate W<sub>ibt</sub></button>
+</form>
+
+<!-- RESULT -->
+{% if result is not None %}
+
+<div class="result-card">
+
+    <div class="result-card-header">
+        <span>Result</span>
+        <span>Water Injected at Breakthrough</span>
+    </div>
+
+    <div class="result-card-body">
+
+        <span class="status-pill status-unit">Calculated &mdash; W<sub>ibt</sub></span>
+
+        <div class="result-value-row">
+            <span class="val">{{ result|floatformat:2 }}</span>
+            <span class="unit">bbl</span>
+        </div>
+
+        <div class="metrics-row">
+            <div class="metric-block">
+                <span class="mb-label">Pore Volume</span>
+                <span class="mb-val">{{ PV|floatformat:2 }}</span>
+                <div class="mb-sub">bbl</div>
+            </div>
+            <div class="metric-block">
+                <span class="mb-label">Model Used</span>
+                <span class="mb-val" style="font-size:14px;">{{ model|default:"—" }}</span>
+                <div class="mb-sub">selected calculation method</div>
+            </div>
+        </div>
+
+        {% if interpretation %}
+        <div class="interpretation-box">{{ interpretation }}</div>
+        {% endif %}
+
+    </div>
+</div>
+
+{% endif %}
+
+<a href="/" class="back">&#8592; Back to Dashboard</a>
 
 <script>
 function toggleInputs(){
     let model = document.getElementById("model").value;
 
-    document.getElementById("satModel").style.display = (model === "sat") ? "block" : "none";
-    document.getElementById("injModel").style.display = (model === "inj") ? "block" : "none";
+    document.getElementById("satModel").classList.toggle("active", model === "sat");
+    document.getElementById("injModel").classList.toggle("active", model === "inj");
+
+    document.getElementById("tabSat").classList.toggle("active", model === "sat");
+    document.getElementById("tabInj").classList.toggle("active", model === "inj");
 }
+
+window.addEventListener('DOMContentLoaded', function () {
+    toggleInputs();
+});
 </script>
 
 {% endblock %}

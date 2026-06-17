@@ -1,56 +1,272 @@
 {% extends 'base.html' %}
-
-{% block title %}
-Relative Permeability Plot
-{% endblock %}
-
+{% block title %}Relative Permeability Plot (Sw vs Kro/Krw) — EOR Solver{% endblock %}
 {% block content %}
 
-<div class="container">
+<style>
+.page-header {
+    text-align: center;
+    margin-bottom: 28px;
+}
+.page-header p {
+    font-size: 14px;
+    color: var(--text-muted);
+    max-width: 500px;
+    margin: 8px auto 0;
+    line-height: 1.6;
+}
 
-    <h1>Relative Permeability Plot (Sw vs Kro/Krw)</h1>
+.info-strip {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    margin-bottom: 24px;
+}
+.info-cell {
+    background: #fafbfe;
+    padding: 12px 14px;
+    text-align: center;
+}
+.info-cell .ic-label {
+    font-size: 11px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    font-weight: 600;
+    display: block;
+    margin-bottom: 3px;
+}
+.info-cell .ic-val {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-main);
+    font-family: var(--mono);
+}
+@media (max-width: 480px) {
+    .info-strip { grid-template-columns: 1fr; }
+}
 
-    <div class="formula">
-        Plot Sw against Kro/Krw (15 data points)
-    </div>
+/* ── DATA ENTRY TABLE ── */
+.data-table-wrap {
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    margin-bottom: 20px;
+}
+.data-table-scroll {
+    max-height: 420px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+}
+table.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+table.data-table thead th {
+    position: sticky;
+    top: 0;
+    background: var(--navy);
+    color: rgba(255,255,255,0.85);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    padding: 10px 12px;
+    text-align: center;
+    z-index: 2;
+}
+table.data-table thead th:first-child {
+    width: 56px;
+}
+table.data-table tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: var(--transition);
+}
+table.data-table tbody tr:last-child {
+    border-bottom: none;
+}
+table.data-table tbody tr:hover {
+    background: var(--accent-dim);
+}
+table.data-table tbody td {
+    padding: 6px 10px;
+    text-align: center;
+}
+table.data-table tbody td.idx-cell {
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-dim);
+    background: #fafbfe;
+}
+table.data-table tbody td input {
+    margin-bottom: 0;
+    padding: 8px 10px;
+    text-align: center;
+    font-family: var(--mono);
+    font-size: 13px;
+    border-radius: var(--radius-sm);
+}
 
-    <form method="POST">
-        {% csrf_token %}
+.table-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+}
+.table-toolbar span {
+    font-size: 11px;
+    color: var(--text-dim);
+    font-weight: 500;
+}
 
-        <table style="width:100%; text-align:center;">
-            <tr>
-                <th>Index</th>
-                <th>Sw</th>
-                <th>Kro/Krw</th>
-            </tr>
+/* ── RESULT / PLOT CARD ── */
+.result-card {
+    margin-top: 24px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    animation: slideUp 0.35s ease both;
+}
+.result-card-header {
+    background: var(--navy);
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.result-card-header span {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.55);
+}
+.result-card-body {
+    padding: 24px;
+    background: #fff;
+}
+.chart-frame {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 16px;
+    text-align: center;
+}
+.chart-frame img {
+    width: 100%;
+    max-width: 700px;
+    border-radius: var(--radius-sm);
+    display: inline-block;
+}
 
-            {% for i in "123456789012345" %}
-            <tr>
-                <td>{{ forloop.counter }}</td>
-                <td>
-                    <input type="number" step="any" name="sw{{ forloop.counter }}" required>
-                </td>
-                <td>
-                    <input type="number" step="any" name="kr{{ forloop.counter }}" required>
-                </td>
-            </tr>
-            {% endfor %}
-        </table>
+.status-pill {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+    letter-spacing: 0.3px;
+    margin-bottom: 14px;
+}
+.status-unit { background: rgba(26,82,184,0.10); color: var(--navy-mid); }
+</style>
 
-        <br>
-
-        <button type="submit">Plot Graph</button>
-    </form>
-
-    {% if plot_url %}
-    <div class="result">
-        <h3>Relative Permeability Curve</h3>
-        <img src="data:image/png;base64,{{ plot_url }}" style="width:100%; max-width:700px;">
-    </div>
-    {% endif %}
-
-    <a href="/">← Back to Dashboard</a>
-
+<!-- PAGE HEADER -->
+<div class="page-header">
+    <span class="badge">Sweep & Flow</span>
+    <h1>Relative Permeability Plot <span style="font-size:15px; color:var(--text-muted); font-weight:400;">(S<sub>w</sub> vs k<sub>ro</sub>/k<sub>rw</sub>)</span></h1>
+    <p>Plots the relative permeability ratio against water saturation, used to characterize multiphase flow behaviour across the saturation range.</p>
 </div>
+
+<!-- FORMULA -->
+<div class="formula">
+    Plot S<sub>w</sub> against k<sub>ro</sub> / k<sub>rw</sub> &nbsp;&mdash;&nbsp; 15 data points
+</div>
+
+<!-- CONTEXT STRIP -->
+<div class="info-strip">
+    <div class="info-cell">
+        <span class="ic-label">Data Points</span>
+        <span class="ic-val">15 max</span>
+    </div>
+    <div class="info-cell">
+        <span class="ic-label">X-Axis</span>
+        <span class="ic-val">S<sub>w</sub> (frac)</span>
+    </div>
+    <div class="info-cell">
+        <span class="ic-label">Y-Axis</span>
+        <span class="ic-val">k<sub>ro</sub>/k<sub>rw</sub></span>
+    </div>
+</div>
+
+<!-- FORM -->
+<form method="POST">
+    {% csrf_token %}
+
+    <div class="data-table-wrap">
+        <div class="data-table-scroll">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>S<sub>w</sub></th>
+                        <th>k<sub>ro</sub>/k<sub>rw</sub></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for i in "123456789012345" %}
+                    <tr>
+                        <td class="idx-cell">{{ forloop.counter }}</td>
+                        <td>
+                            <input type="number" step="any" name="sw{{ forloop.counter }}" placeholder="0.000" required>
+                        </td>
+                        <td>
+                            <input type="number" step="any" name="kr{{ forloop.counter }}" placeholder="0.000" required>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="table-toolbar">
+            <span>Enter S<sub>w</sub> / k<sub>ro</sub>/k<sub>rw</sub> pairs in ascending saturation order</span>
+        </div>
+    </div>
+
+    <button type="submit">Plot Graph</button>
+</form>
+
+<!-- RESULT -->
+{% if plot_url %}
+
+<div class="result-card">
+
+    <div class="result-card-header">
+        <span>Result</span>
+        <span>Relative Permeability Curve</span>
+    </div>
+
+    <div class="result-card-body">
+
+        <span class="status-pill status-unit">Plotted &mdash; k<sub>ro</sub>/k<sub>rw</sub> vs S<sub>w</sub></span>
+
+        <div class="chart-frame">
+            <img src="data:image/png;base64,{{ plot_url }}" alt="Relative Permeability Curve">
+        </div>
+
+    </div>
+</div>
+
+{% endif %}
+
+<a href="/" class="back">&#8592; Back to Dashboard</a>
 
 {% endblock %}

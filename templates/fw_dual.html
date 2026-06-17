@@ -1,136 +1,441 @@
 {% extends 'base.html' %}
-
-{% block title %}
-Fractional Flow Dual Plot
-{% endblock %}
-
+{% block title %}Fractional Flow Dual Plot (Fw & dfw/dSw) — EOR Solver{% endblock %}
 {% block content %}
 
-<div class="container">
+<style>
+.page-header {
+    text-align: center;
+    margin-bottom: 28px;
+}
+.page-header p {
+    font-size: 14px;
+    color: var(--text-muted);
+    max-width: 520px;
+    margin: 8px auto 0;
+    line-height: 1.6;
+}
 
+.info-strip {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    margin-bottom: 24px;
+}
+.info-cell {
+    background: #fafbfe;
+    padding: 12px 14px;
+    text-align: center;
+}
+.info-cell .ic-label {
+    font-size: 11px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    font-weight: 600;
+    display: block;
+    margin-bottom: 3px;
+}
+.info-cell .ic-val {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-main);
+    font-family: var(--mono);
+}
+@media (max-width: 480px) {
+    .info-strip { grid-template-columns: 1fr; }
+}
+
+/* ── AXIS LEGEND ── */
+.axis-legend {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+.axis-chip {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 10px 14px;
+    background: #fafbfe;
+}
+.axis-chip .ac-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+.axis-chip .ac-dot.left  { background: var(--navy); }
+.axis-chip .ac-dot.right { background: var(--accent); }
+.axis-chip .ac-text {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.3;
+}
+.axis-chip .ac-text strong {
+    display: block;
+    font-size: 13px;
+    color: var(--text-main);
+    font-weight: 600;
+    font-family: var(--mono);
+}
+@media (max-width: 560px) {
+    .axis-legend { grid-template-columns: 1fr; }
+}
+
+/* ── DATA ENTRY TABLE ── */
+.data-table-wrap {
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    margin-bottom: 20px;
+}
+.data-table-scroll {
+    max-height: 420px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+}
+table.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+table.data-table thead th {
+    position: sticky;
+    top: 0;
+    background: var(--navy);
+    color: rgba(255,255,255,0.85);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    padding: 10px 12px;
+    text-align: center;
+    z-index: 2;
+}
+table.data-table thead th:first-child {
+    width: 50px;
+}
+table.data-table tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: var(--transition);
+}
+table.data-table tbody tr:last-child {
+    border-bottom: none;
+}
+table.data-table tbody tr:hover {
+    background: var(--accent-dim);
+}
+table.data-table tbody td {
+    padding: 6px 8px;
+    text-align: center;
+}
+table.data-table tbody td.idx-cell {
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-dim);
+    background: #fafbfe;
+}
+table.data-table tbody td input {
+    margin-bottom: 0;
+    padding: 8px 9px;
+    text-align: center;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    border-radius: var(--radius-sm);
+}
+
+.table-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+}
+.table-toolbar span {
+    font-size: 11px;
+    color: var(--text-dim);
+    font-weight: 500;
+}
+
+/* ── RESULT / CHART CARD ── */
+.result-card {
+    margin-top: 24px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    animation: slideUp 0.35s ease both;
+}
+.result-card-header {
+    background: var(--navy);
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.result-card-header span {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.55);
+}
+.result-card-body {
+    padding: 24px;
+    background: #fff;
+}
+.chart-frame {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 16px;
+}
+
+.status-pill {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+    letter-spacing: 0.3px;
+    margin-bottom: 14px;
+}
+.status-unit { background: rgba(26,82,184,0.10); color: var(--navy-mid); }
+</style>
+
+<!-- PAGE HEADER -->
+<div class="page-header">
+    <span class="badge">Sweep & Flow</span>
     <h1>Fractional Flow + Derivative Analysis</h1>
+    <p>Dual-axis plot of fractional flow (F<sub>w</sub>) and its derivative with respect to water saturation (dF<sub>w</sub>/dS<sub>w</sub>), used to locate the breakthrough saturation via the tangent-line construction.</p>
+</div>
 
-    <div class="formula">
-        Plot Fw (left axis) and dfw/dSw (right axis) against Sw
+<!-- FORMULA -->
+<div class="formula">
+    Plot F<sub>w</sub> (left axis) and dF<sub>w</sub>/dS<sub>w</sub> (right axis) against S<sub>w</sub>
+</div>
+
+<!-- CONTEXT STRIP -->
+<div class="info-strip">
+    <div class="info-cell">
+        <span class="ic-label">Data Points</span>
+        <span class="ic-val">15 max</span>
+    </div>
+    <div class="info-cell">
+        <span class="ic-label">X-Axis</span>
+        <span class="ic-val">S<sub>w</sub> (frac)</span>
+    </div>
+    <div class="info-cell">
+        <span class="ic-label">Plot Type</span>
+        <span class="ic-val">Dual Y-Axis</span>
+    </div>
+</div>
+
+<!-- AXIS LEGEND -->
+<div class="axis-legend">
+    <div class="axis-chip">
+        <span class="ac-dot left"></span>
+        <span class="ac-text"><strong>F<sub>w</sub></strong>Left axis &mdash; fractional flow</span>
+    </div>
+    <div class="axis-chip">
+        <span class="ac-dot right"></span>
+        <span class="ac-text"><strong>dF<sub>w</sub>/dS<sub>w</sub></strong>Right axis &mdash; flow derivative</span>
+    </div>
+</div>
+
+<!-- FORM -->
+<form method="POST">
+    {% csrf_token %}
+
+    <div class="data-table-wrap">
+        <div class="data-table-scroll">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>S<sub>w</sub></th>
+                        <th>F<sub>w</sub></th>
+                        <th>dF<sub>w</sub>/dS<sub>w</sub></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for i in "123456789012345" %}
+                    <tr>
+                        <td class="idx-cell">{{ forloop.counter }}</td>
+                        <td><input type="number" step="any" name="sw{{ forloop.counter }}" placeholder="0.000" required></td>
+                        <td><input type="number" step="any" name="fw{{ forloop.counter }}" placeholder="0.000" required></td>
+                        <td><input type="number" step="any" name="dfw{{ forloop.counter }}" placeholder="0.000" required></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="table-toolbar">
+            <span>Enter S<sub>w</sub> / F<sub>w</sub> / dF<sub>w</sub>/dS<sub>w</sub> values in ascending saturation order</span>
+        </div>
     </div>
 
-    <form method="POST">
-        {% csrf_token %}
+    <button type="submit">Generate Dual Plot</button>
+</form>
 
-        <table style="width:100%; text-align:center;">
-            <tr>
-                <th>Index</th>
-                <th>Sw</th>
-                <th>Fw</th>
-                <th>dfw/dSw</th>
-            </tr>
-
-            {% for i in "123456789012345" %}
-            <tr>
-                <td>{{ forloop.counter }}</td>
-                <td><input type="number" step="any" name="sw{{ forloop.counter }}" required></td>
-                <td><input type="number" step="any" name="fw{{ forloop.counter }}" required></td>
-                <td><input type="number" step="any" name="dfw{{ forloop.counter }}" required></td>
-            </tr>
-            {% endfor %}
-        </table>
-
-        <br>
-        <button type="submit">Generate Dual Plot</button>
-    </form>
-
+<!-- RESULT -->
 {% if plot_data %}
 
-<div class="result">
+<div class="result-card">
 
-    <h3>Fractional Flow Analysis</h3>
+    <div class="result-card-header">
+        <span>Result</span>
+        <span>Fractional Flow Analysis</span>
+    </div>
 
-    <canvas id="dualChart"></canvas>
+    <div class="result-card-body">
 
+        <span class="status-pill status-unit">Plotted &mdash; Dual Axis</span>
+
+        <div class="chart-frame">
+            <canvas id="dualChart"></canvas>
+        </div>
+
+    </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
+window.addEventListener('DOMContentLoaded', function () {
 
-const chartData = {{ plot_data|safe }};
+    const chartData = {{ plot_data|safe }};
 
-const sw = chartData.map(item => item.Sw);
-const fw = chartData.map(item => item.Fw);
-const derivative = chartData.map(item => item.dfw_dSw);
+    const sw         = chartData.map(item => item.Sw);
+    const fw         = chartData.map(item => item.Fw);
+    const derivative = chartData.map(item => item.dfw_dSw);
 
-new Chart(document.getElementById('dualChart'), {
+    const navy   = '#0b2e6e';
+    const accent = '#00c2a8';
 
-    type: 'line',
+    new Chart(document.getElementById('dualChart'), {
 
-    data: {
+        type: 'line',
 
-        labels: sw,
+        data: {
 
-        datasets: [
+            labels: sw,
 
-            {
-                label: 'Fw',
-                data: fw,
-                yAxisID: 'y'
-            },
-
-            {
-                label: 'dfw/dSw',
-                data: derivative,
-                yAxisID: 'y1'
-            }
-
-        ]
-    },
-
-    options: {
-
-        responsive: true,
-
-        interaction: {
-            mode: 'index',
-            intersect: false
+            datasets: [
+                {
+                    label: 'Fw',
+                    data: fw,
+                    yAxisID: 'y',
+                    borderColor: navy,
+                    backgroundColor: 'rgba(11,46,110,0.08)',
+                    pointBackgroundColor: navy,
+                    pointBorderColor: '#fff',
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    borderWidth: 2.5,
+                    tension: 0.3,
+                    fill: false
+                },
+                {
+                    label: 'dfw/dSw',
+                    data: derivative,
+                    yAxisID: 'y1',
+                    borderColor: accent,
+                    backgroundColor: 'rgba(0,194,168,0.08)',
+                    pointBackgroundColor: accent,
+                    pointBorderColor: '#fff',
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    borderWidth: 2.5,
+                    borderDash: [5, 3],
+                    tension: 0.3,
+                    fill: false
+                }
+            ]
         },
 
-        scales: {
+        options: {
 
-            x: {
-                title: {
-                    display: true,
-                    text: 'Water Saturation (Sw)'
-                }
+            responsive: true,
+
+            interaction: {
+                mode: 'index',
+                intersect: false
             },
 
-            y: {
-                position: 'left',
-                title: {
-                    display: true,
-                    text: 'Fractional Flow (Fw)'
-                }
-            },
-
-            y1: {
-                position: 'right',
-                title: {
-                    display: true,
-                    text: 'dfw/dSw'
+            plugins: {
+                legend: {
+                    labels: {
+                        font: { family: "'Inter', sans-serif", size: 12, weight: '600' },
+                        color: '#0f1c33'
+                    }
                 },
-                grid: {
-                    drawOnChartArea: false
+                tooltip: {
+                    backgroundColor: navy,
+                    titleFont: { family: "'JetBrains Mono', monospace" },
+                    bodyFont: { family: "'JetBrains Mono', monospace" },
+                    padding: 10,
+                    cornerRadius: 6
+                }
+            },
+
+            scales: {
+
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Water Saturation (Sw)',
+                        font: { family: "'Inter', sans-serif", size: 12, weight: '600' },
+                        color: '#5a6c8a'
+                    },
+                    grid: { color: '#dce3f0' },
+                    ticks: { font: { family: "'JetBrains Mono', monospace" }, color: '#8fa0bc' }
+                },
+
+                y: {
+                    position: 'left',
+                    title: {
+                        display: true,
+                        text: 'Fractional Flow (Fw)',
+                        font: { family: "'Inter', sans-serif", size: 12, weight: '600' },
+                        color: navy
+                    },
+                    grid: { color: '#dce3f0' },
+                    ticks: { font: { family: "'JetBrains Mono', monospace" }, color: '#8fa0bc' }
+                },
+
+                y1: {
+                    position: 'right',
+                    title: {
+                        display: true,
+                        text: 'dfw/dSw',
+                        font: { family: "'Inter', sans-serif", size: 12, weight: '600' },
+                        color: '#007a6b'
+                    },
+                    grid: {
+                        drawOnChartArea: false
+                    },
+                    ticks: { font: { family: "'JetBrains Mono', monospace" }, color: '#8fa0bc' }
                 }
             }
         }
-    }
+
+    });
 
 });
-
 </script>
 
 {% endif %}
 
-    <a href="/">← Back to Dashboard</a>
-
-</div>
+<a href="/" class="back">&#8592; Back to Dashboard</a>
 
 {% endblock %}

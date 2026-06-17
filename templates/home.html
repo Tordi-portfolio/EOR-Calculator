@@ -4,6 +4,75 @@
 {% block content %}
 
 <style>
+/* ── SCHOOL BANNER ── */
+.school-banner {
+    background: var(--navy);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 20px 24px;
+    margin-bottom: 28px;
+    display: flex;
+    align-items: flex-start;
+    gap: 18px;
+}
+.school-crest {
+    width: 50px;
+    height: 50px;
+    background: var(--accent);
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.school-crest svg {
+    width: 24px;
+    height: 24px;
+    fill: var(--navy);
+}
+.school-info { flex: 1; min-width: 0; }
+.school-info .si-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1.1px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.4);
+    margin-bottom: 5px;
+}
+.school-info .si-name {
+    font-size: 17px;
+    font-weight: 700;
+    color: #ffffff;
+    letter-spacing: -0.2px;
+    margin-bottom: 14px;
+    line-height: 1.2;
+}
+.si-meta {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 10px 24px;
+}
+.si-meta-item { display: flex; flex-direction: column; gap: 2px; }
+.si-meta-item .m-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.9px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.32);
+}
+.si-meta-item .m-value {
+    font-size: 13px;
+    font-weight: 500;
+    color: rgba(255,255,255,0.85);
+    line-height: 1.4;
+}
+.si-meta-item .m-value.accent { color: var(--accent); }
+@media (max-width: 540px) {
+    .school-banner { flex-direction: column; gap: 14px; }
+    .si-meta { grid-template-columns: 1fr 1fr; }
+    .school-info .si-name { font-size: 15px; }
+}
+
 /* ── HERO ── */
 .hero {
     text-align: center;
@@ -159,11 +228,42 @@
 }
 </style>
 
+<!-- SCHOOL BANNER -->
+<div class="school-banner">
+    <div class="school-crest">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 3L1 9l4 2.18V17c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2v-5.82L21 9 12 3zm6 13H6v-4.5l6 3.27 6-3.27V16zm-6-4.73L3.74 9 12 4.73 20.26 9 12 11.27z"/>
+        </svg>
+    </div>
+    <div class="school-info">
+        <div class="si-label">University of Port Harcourt &mdash; Final Year Project</div>
+        <div class="si-name">Gbarabe Tordi Joseph</div>
+        <div class="si-meta">
+            <div class="si-meta-item">
+                <span class="m-label">Matric No.</span>
+                <span class="m-value accent">U2020/3065033</span>
+            </div>
+            <div class="si-meta-item">
+                <span class="m-label">Department</span>
+                <span class="m-value">Petroleum Engineering</span>
+            </div>
+            <div class="si-meta-item">
+                <span class="m-label">Project Supervisor</span>
+                <span class="m-value">Dr. Emeke Okafor</span>
+            </div>
+            <div class="si-meta-item">
+                <span class="m-label">Project Topic</span>
+                <span class="m-value">Development of a computer application that evaluate well log data</span>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- HERO -->
 <div class="hero">
     <span class="badge" style="margin-bottom:12px; display:inline-block;">Petroleum Engineering</span>
     <h1>EOR Engineering Calculator Suite</h1>
-    <p>Professional tools for waterflood analysis, sweep efficiency, displacement performance, and reservoir volumetrics — built for engineers and researchers.</p>
+    <p>Professional tools for waterflood analysis, sweep efficiency, displacement performance, and reservoir volumetrics &mdash; built for engineers and researchers.</p>
 </div>
 
 <!-- STATS -->
