@@ -4,9 +4,18 @@ from django.shortcuts import render
 
 def home(request):
     return render(request, "home.html")
+def articleone(request):
+    return render(request, "article/articleone.html")
 
+def articletwo(request):
+    return render(request, "article/articletwo.html")
 
-from django.shortcuts import render
+def articlethree(request):
+    return render(request, "article/articlethree.html")
+
+def articlefour(request):
+    return render(request, "article/articlefour.html")
+
 
 def mobility_ratio(request):
 
