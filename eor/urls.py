@@ -24,4 +24,10 @@ urlpatterns = [
     path('fw-dual/', views.fw_dual_plot, name='fw_dual'),
     path('slope/', views.slope, name='slope'),
     path('unit-converter/', views.unit_converter, name='unit_converter'),
+
+    path('articleone/', views.articleone, name='articleone'),
+    path('articletwo/', views.articletwo, name='articletwo'),
+    path('articlethree/', views.articlethree, name='articlethree'),
+    path('articlefour/', views.articlefour, name='articlefour'),
+]
 ]
