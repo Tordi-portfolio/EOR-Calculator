@@ -30,4 +30,3 @@ urlpatterns = [
     path('articlethree/', views.articlethree, name='articlethree'),
     path('articlefour/', views.articlefour, name='articlefour'),
 ]
-]
