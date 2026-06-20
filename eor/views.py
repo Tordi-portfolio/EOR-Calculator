@@ -1,9 +1,7 @@
 import json
-
 from django.shortcuts import render
 
-def home(request):
-    return render(request, "home.html")
+
 def articleone(request):
     return render(request, "article/articleone.html")
 
@@ -15,6 +13,10 @@ def articlethree(request):
 
 def articlefour(request):
     return render(request, "article/articlefour.html")
+
+def home(request):
+    return render(request, "home.html")
+
 
 
 def mobility_ratio(request):
@@ -758,3 +760,199 @@ def unit_converter(request):
         "result": result,
         "error": error
     })
+
+
+from django.shortcuts import render
+
+def mobility(request):
+
+    result = None
+    interpretation = None
+
+    if request.method == "POST":
+
+        phase = request.POST.get("phase")
+
+        kr = float(request.POST.get("kr"))
+        mu = float(request.POST.get("mu"))
+
+        result = kr / mu
+
+        if result < 0.1:
+            interpretation = "Low mobility"
+        elif result < 1:
+            interpretation = "Moderate mobility"
+        else:
+            interpretation = "High mobility"
+
+    return render(request, "mobility.html", {
+        "result": result,
+        "interpretation": interpretation
+    })
+
+
+from django.shortcuts import render
+
+def interpolation(request):
+
+    result = None
+    mode = None
+
+    if request.method == "POST":
+
+        mode = request.POST.get("mode")
+
+        x1 = float(request.POST.get("x1"))
+        y1 = float(request.POST.get("y1"))
+        x2 = float(request.POST.get("x2"))
+        y2 = float(request.POST.get("y2"))
+
+        if mode == "solve_y":
+
+            x = float(request.POST.get("x"))
+
+            result = y1 + ((x - x1) * (y2 - y1)) / (x2 - x1)
+
+        elif mode == "solve_x":
+
+            y = float(request.POST.get("y"))
+
+            result = x1 + ((y - y1) * (x2 - x1)) / (y2 - y1)
+
+    return render(request, "interpolation.html", {
+        "result": result,
+        "mode": mode
+    })
+
+
+from django.shortcuts import render
+import math
+
+def dfw_dsw(request):
+
+    result = None
+    interpretation = None
+
+    if request.method == "POST":
+
+        muw = float(request.POST.get("muw"))
+        muo = float(request.POST.get("muo"))
+        a = float(request.POST.get("a"))
+        b = float(request.POST.get("b"))
+        Sw = float(request.POST.get("Sw"))
+
+        viscosity_ratio = muw / muo
+
+        numerator = -(
+            viscosity_ratio *
+            a *
+            b *
+            math.exp(b * Sw)
+        )
+
+        denominator = (
+            1 +
+            viscosity_ratio *
+            a *
+            math.exp(b * Sw)
+        ) ** 2
+
+        result = numerator / denominator
+
+        if abs(result) < 0.1:
+            interpretation = "Low fractional flow gradient"
+        elif abs(result) < 1:
+            interpretation = "Moderate fractional flow gradient"
+        else:
+            interpretation = "High fractional flow gradient"
+
+    return render(
+        request,
+        "dfw_dsw.html",
+        {
+            "result": result,
+            "interpretation": interpretation
+        }
+    )
+
+
+
+from django.shortcuts import render
+
+def mobility_ratio_breakthrough(request):
+
+    result = None
+    stage = "before"
+
+    # Context fields the template references
+    krw_swf = kro_swi = None
+    krw_sw2 = kro_sw1 = None
+    muo = muw = None
+
+    if request.method == "POST":
+        stage = request.POST.get("stage", "before")
+        muo = float(request.POST.get("muo"))
+        muw = float(request.POST.get("muw"))
+
+        if stage == "before":
+            krw_swf = float(request.POST.get("krw_swf"))
+            kro_swi = float(request.POST.get("kro_swi"))
+            result = (krw_swf / kro_swi) * (muo / muw)
+        else:  # "after"
+            krw_sw2 = float(request.POST.get("krw_sw2"))
+            kro_sw1 = float(request.POST.get("kro_sw1"))
+            result = (krw_sw2 / kro_sw1) * (muo / muw)
+
+    return render(
+        request,
+        "mobility_ratio_breakthrough.html",
+        {
+            "result": result,
+            "stage": stage,
+            "krw_swf": krw_swf,
+            "kro_swi": kro_swi,
+            "krw_sw2": krw_sw2,
+            "kro_sw1": kro_sw1,
+            "muo": muo,
+            "muw": muw,
+        },
+    )
+
+
+# from django.shortcuts import render
+# def mobility_ratio_breakthrough(request):
+
+#     result_before = None
+#     result_after = None
+
+#     if request.method == "POST":
+
+#         # BEFORE BREAKTHROUGH
+#         krw_swf = float(request.POST.get("krw_swf"))
+#         kro_swi = float(request.POST.get("kro_swi"))
+
+#         # AFTER BREAKTHROUGH
+#         krw_sw2 = float(request.POST.get("krw_sw2"))
+#         kro_sw1 = float(request.POST.get("kro_sw1"))
+
+#         muo = float(request.POST.get("muo"))
+#         muw = float(request.POST.get("muw"))
+
+#         result_before = (
+#             (krw_swf / kro_swi)
+#             * (muo / muw)
+#         )
+
+#         result_after = (
+#             (krw_sw2 / kro_sw1)
+#             * (muo / muw)
+#         )
+
+#     return render(
+#         request,
+#         "mobility_ratio_breakthrough.html",
+#         {
+#             "result_before": result_before,
+#             "result_after": result_after
+#         }
+#     )

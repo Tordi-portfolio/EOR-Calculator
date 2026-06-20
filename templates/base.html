@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}EOR Solver{% endblock %}</title>
 
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 
     <style>
 *, *::before, *::after {
@@ -18,7 +18,9 @@
     --navy:       #0b2e6e;
     --navy-mid:   #0f3d8c;
     --navy-light: #1a52b8;
+    --navy-deep:  #081f4d;
     --accent:     #00c2a8;
+    --accent-light: #1ddcc0;
     --accent-dim: rgba(0,194,168,0.12);
     --surface:    #f4f6fb;
     --card-bg:    #ffffff;
@@ -31,7 +33,29 @@
     --radius-sm:  6px;
     --radius-md:  10px;
     --radius-lg:  16px;
-    --transition: 0.2s ease;
+
+    /* ── Motion system ── */
+    --ease-out:      cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-in-out:   cubic-bezier(0.65, 0, 0.35, 1);
+    --ease-spring:   cubic-bezier(0.34, 1.56, 0.64, 1);
+    --dur-instant:   0.12s;
+    --dur-fast:      0.18s;
+    --dur-base:      0.28s;
+    --dur-slow:      0.42s;
+    --transition:    var(--dur-fast) var(--ease-out);
+
+    /* ── Layout ── */
+    --sidebar-w:  248px;
+    --topbar-h:   56px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
 }
 
 html { scroll-behavior: smooth; }
@@ -41,256 +65,360 @@ body {
     background: var(--surface);
     color: var(--text-main);
     min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+}
+
+/* ══════════════════════════════════════
+   SHELL — fixed left rail layout
+   ══════════════════════════════════════ */
+
+.shell {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* ── SIDEBAR (fixed, always visible ≥1024px) ── */
+.sidebar {
+    width: var(--sidebar-w);
+    flex-shrink: 0;
+    background: var(--card-bg);
+    border-right: 1px solid var(--border);
     display: flex;
     flex-direction: column;
-}
-
-/* ── NAVBAR ── */
-.navbar {
-    position: sticky;
+    position: fixed;
     top: 0;
+    left: 0;
+    bottom: 0;
     z-index: 1000;
-    background: var(--navy);
-    height: 58px;
-    padding: 0 24px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    border-bottom: 1px solid rgba(255,255,255,0.07);
+    transform: translateX(-100%);
+    transition: transform var(--dur-slow) var(--ease-out), box-shadow var(--dur-slow) var(--ease-out);
 }
 
-.logo {
+.sidebar.open {
+    transform: translateX(0);
+    box-shadow: 16px 0 40px rgba(8,31,77,0.18);
+}
+
+@media (min-width: 1024px) {
+    .sidebar {
+        transform: translateX(0);
+        box-shadow: none;
+        position: sticky;
+        height: 100vh;
+    }
+}
+
+/* sidebar brand block */
+.brand {
+    height: var(--topbar-h);
     display: flex;
     align-items: center;
     gap: 10px;
-    font-size: 15px;
-    font-weight: 700;
-    color: #ffffff;
-    letter-spacing: 0.3px;
+    padding: 0 18px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
     text-decoration: none;
+    color: var(--text-main);
 }
 
-.logo-icon {
-    width: 30px;
-    height: 30px;
-    background: var(--accent);
+.brand-mark {
+    width: 28px;
+    height: 28px;
+    background: var(--navy);
     border-radius: var(--radius-sm);
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
+    position: relative;
+    transition: transform var(--dur-base) var(--ease-spring);
 }
 
-.logo-icon svg {
-    width: 16px;
-    height: 16px;
-    fill: var(--navy);
-}
+.brand:hover .brand-mark { transform: rotate(-6deg) scale(1.05); }
 
-.logo-sub {
-    font-weight: 400;
-    font-size: 11px;
-    color: rgba(255,255,255,0.45);
-    letter-spacing: 0.8px;
-    text-transform: uppercase;
-    display: block;
-    line-height: 1;
-    margin-top: 2px;
-}
-
-.nav-right {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-/* ── SIDEBAR TOGGLE BUTTON ── */
-.menu-toggle {
-    background: rgba(255,255,255,0.08);
-    border: 1px solid rgba(255,255,255,0.12);
-    color: white;
-    padding: 6px 10px;
-    border-radius: var(--radius-sm);
-    cursor: pointer;
-    font-size: 18px;
-    line-height: 1;
-    transition: var(--transition);
-    display: flex;
-    align-items: center;
-}
-
-.menu-toggle:hover {
-    background: rgba(255,255,255,0.16);
-}
-
-/* ── HAMBURGER (mobile) ── */
-.hamburger {
-    display: none;
-    flex-direction: column;
-    gap: 5px;
-    cursor: pointer;
-    padding: 4px;
-}
-
-.hamburger span {
-    display: block;
-    width: 22px;
-    height: 2px;
-    background: white;
-    border-radius: 2px;
-    transition: var(--transition);
-}
-
-/* ── SIDEBAR ── */
-.sidebar {
-    position: fixed;
-    top: 58px;
-    right: 0;
-    width: 260px;
-    height: calc(100vh - 58px);
-    background: var(--navy);
-    border-left: 1px solid rgba(255,255,255,0.07);
-    overflow-y: auto;
-    overflow-x: hidden;
-    z-index: 999;
-    transform: translateX(100%);
-    transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
-    scrollbar-width: thin;
-    scrollbar-color: rgba(255,255,255,0.15) transparent;
-    display: flex;
-    flex-direction: column;
-    padding: 16px 0 24px;
-}
-
-.sidebar.open {
-    transform: translateX(0);
-}
-
-.sidebar::-webkit-scrollbar { width: 4px; }
-.sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
-
-.sidebar-section {
-    padding: 0 12px;
-    margin-bottom: 4px;
-}
-
-.sidebar-label {
-    font-size: 10px;
-    font-weight: 600;
-    letter-spacing: 1.2px;
-    text-transform: uppercase;
-    color: rgba(255,255,255,0.3);
-    padding: 14px 8px 6px;
-}
-
-.sidebar a {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    color: rgba(255,255,255,0.72);
-    text-decoration: none;
-    font-size: 13px;
-    padding: 9px 10px;
-    border-radius: var(--radius-sm);
-    transition: var(--transition);
-    border: 1px solid transparent;
-}
-
-.sidebar a:hover {
-    background: rgba(255,255,255,0.08);
-    color: #ffffff;
-    border-color: rgba(255,255,255,0.06);
-}
-
-.sidebar a.active {
-    background: var(--accent-dim);
-    color: var(--accent);
-    border-color: rgba(0,194,168,0.2);
-    font-weight: 500;
-}
-
-.sidebar a .nav-dot {
+.brand-mark::after {
+    content: '';
+    position: absolute;
     width: 6px;
     height: 6px;
     border-radius: 50%;
-    background: rgba(255,255,255,0.2);
-    flex-shrink: 0;
-    margin-left: auto;
-    display: none;
+    background: var(--accent);
+    top: -2px;
+    right: -2px;
+    box-shadow: 0 0 0 2px var(--card-bg);
 }
 
-.sidebar a.active .nav-dot {
-    background: var(--accent);
+.brand-mark svg { width: 15px; height: 15px; fill: white; }
+
+.brand-text { line-height: 1.15; }
+.brand-text .b-name { font-size: 13.5px; font-weight: 800; letter-spacing: -0.2px; }
+.brand-text .b-sub {
+    font-size: 9.5px;
+    font-weight: 600;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 1.1px;
     display: block;
 }
 
-.sidebar-divider {
-    height: 1px;
-    background: rgba(255,255,255,0.07);
-    margin: 8px 12px;
+/* scrollable nav body */
+.sidebar-scroll {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 14px 0 20px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+}
+.sidebar-scroll::-webkit-scrollbar { width: 4px; }
+.sidebar-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+.nav-group { padding: 0 12px; margin-bottom: 2px; }
+
+.nav-group-label {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 1.1px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    padding: 16px 8px 7px;
 }
 
-/* ── OVERLAY (mobile) ── */
+.nav-group-label::before {
+    content: '';
+    width: 3px;
+    height: 11px;
+    background: var(--accent);
+    border-radius: 2px;
+    flex-shrink: 0;
+}
+
+.nav-group a {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 8px 10px 8px 16px;
+    border-radius: var(--radius-sm);
+    transition: background var(--transition), color var(--transition);
+    margin-bottom: 1px;
+}
+
+.nav-group a::before {
+    content: '';
+    position: absolute;
+    left: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--border);
+    transition: background var(--transition), transform var(--dur-fast) var(--ease-spring);
+}
+
+.nav-group a:hover {
+    background: var(--surface);
+    color: var(--text-main);
+}
+
+.nav-group a:hover::before {
+    background: var(--navy-light);
+    transform: translateY(-50%) scale(1.4);
+}
+
+.nav-group a.active {
+    background: var(--accent-dim);
+    color: var(--navy);
+    font-weight: 600;
+}
+
+.nav-group a.active::before {
+    background: var(--accent);
+    box-shadow: 0 0 6px rgba(0,194,168,0.6);
+    transform: translateY(-50%) scale(1.4);
+}
+
+.nav-external {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+.nav-external svg { width: 11px; height: 11px; opacity: 0.6; }
+
+.sidebar-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 10px 18px;
+}
+
+/* sidebar footer mini */
+.sidebar-foot {
+    padding: 12px 18px;
+    border-top: 1px solid var(--border);
+    font-size: 10.5px;
+    color: var(--text-dim);
+    flex-shrink: 0;
+}
+
+/* ── SIDEBAR OVERLAY (mobile only) ── */
 .sidebar-overlay {
     display: none;
     position: fixed;
     inset: 0;
-    top: 58px;
-    background: rgba(0,0,0,0.5);
-    z-index: 998;
+    background: rgba(5,15,38,0.5);
+    backdrop-filter: blur(2px);
+    z-index: 999;
+    opacity: 0;
+    transition: opacity var(--dur-base) var(--ease-out);
+}
+.sidebar-overlay.active { display: block; opacity: 1; }
+
+@media (min-width: 1024px) {
+    .sidebar-overlay { display: none !important; }
 }
 
-.sidebar-overlay.active { display: block; }
+/* ══════════════════════════════════════
+   MAIN COLUMN
+   ══════════════════════════════════════ */
 
-/* ── MAIN LAYOUT ── */
-.page-wrapper {
+.main-col {
     flex: 1;
-    transition: margin-right 0.28s cubic-bezier(0.4,0,0.2,1);
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
 }
 
-.page-wrapper.shifted {
-    margin-right: 260px;
-}
-
-/* ── CONTAINER ── */
-.container {
-    max-width: 960px;
-    margin: 36px auto;
+/* ── TOP BAR ── */
+.topbar {
+    height: var(--topbar-h);
     background: var(--card-bg);
-    padding: 32px;
-    border-radius: var(--radius-lg);
-    border: 1px solid var(--border);
-    animation: slideUp 0.35s ease both;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    position: sticky;
+    top: 0;
+    z-index: 500;
 }
 
-@keyframes slideUp {
-    from { opacity: 0; transform: translateY(14px); }
+.topbar-left { display: flex; align-items: center; gap: 12px; }
+
+.menu-toggle {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--navy);
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background var(--transition), border-color var(--transition), transform var(--dur-instant) var(--ease-out);
+    flex-shrink: 0;
+}
+.menu-toggle:hover { background: var(--accent-dim); border-color: var(--accent); }
+.menu-toggle:active { transform: scale(0.92); }
+.menu-toggle svg { width: 15px; height: 15px; }
+
+@media (min-width: 1024px) {
+    .menu-toggle { display: none; }
+}
+
+.breadcrumb-trail {
+    font-size: 12px;
+    color: var(--text-dim);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 500;
+}
+.breadcrumb-trail .sep { opacity: 0.5; }
+.breadcrumb-trail .current { color: var(--navy); font-weight: 600; }
+
+.topbar-right { display: flex; align-items: center; gap: 10px; }
+
+.status-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 5px 10px 5px 8px;
+    border-radius: 20px;
+}
+.status-pill .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-dim);
+    animation: pulse 2.4s ease-in-out infinite;
+}
+@keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 3px var(--accent-dim); }
+    50%      { box-shadow: 0 0 0 5px var(--accent-dim); }
+}
+
+/* ── CONTENT AREA ── */
+.content-area {
+    flex: 1;
+    padding: 32px 28px 60px;
+}
+
+.content-inner {
+    max-width: 760px;
+    margin: 0 auto;
+    animation: riseIn var(--dur-slow) var(--ease-out) both;
+}
+
+@keyframes riseIn {
+    from { opacity: 0; transform: translateY(10px); }
     to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
 }
 
 /* ── PAGE HEADINGS ── */
 h1 {
-    text-align: center;
-    font-size: 22px;
-    font-weight: 700;
+    text-align: left;
+    font-size: 24px;
+    font-weight: 800;
     color: var(--navy);
-    margin-bottom: 8px;
-    letter-spacing: -0.3px;
+    margin-bottom: 6px;
+    letter-spacing: -0.5px;
 }
 
 h2 {
     font-size: 17px;
-    font-weight: 600;
+    font-weight: 700;
     color: var(--text-main);
     margin-bottom: 12px;
+    letter-spacing: -0.2px;
 }
 
 h3 {
-    font-size: 14px;
-    font-weight: 600;
+    font-size: 13px;
+    font-weight: 700;
     color: var(--text-muted);
     text-transform: uppercase;
-    letter-spacing: 0.6px;
+    letter-spacing: 0.7px;
     margin-bottom: 10px;
 }
 
@@ -299,25 +427,27 @@ h3 {
     text-align: center;
     background: #f0f4ff;
     border: 1px solid #d4ddf7;
+    border-left: 3px solid var(--navy-light);
     padding: 14px 20px;
-    border-radius: var(--radius-md);
+    border-radius: 0 var(--radius-md) var(--radius-md) 0;
     margin-bottom: 24px;
     font-family: var(--mono);
     font-size: 14px;
     color: var(--navy-mid);
-    transition: var(--transition);
+    transition: border-color var(--transition), background var(--transition), box-shadow var(--transition);
 }
 
 .formula:hover {
-    border-color: var(--navy-light);
+    border-left-color: var(--accent);
     background: #e8eeff;
+    box-shadow: 0 2px 10px rgba(26,82,184,0.08);
 }
 
 /* ── LABELS ── */
 label {
     display: block;
-    font-weight: 500;
-    font-size: 13px;
+    font-weight: 600;
+    font-size: 12.5px;
     color: var(--text-muted);
     margin-bottom: 5px;
     letter-spacing: 0.1px;
@@ -326,7 +456,8 @@ label {
 /* ── INPUTS ── */
 input[type="text"],
 input[type="number"],
-input {
+input,
+select {
     width: 100%;
     padding: 10px 13px;
     margin-bottom: 16px;
@@ -335,20 +466,20 @@ input {
     font-family: var(--sans);
     font-size: 14px;
     color: var(--text-main);
-    background: #fafbfe;
-    transition: var(--transition);
+    background: var(--surface);
+    transition: border-color var(--transition), background var(--transition), box-shadow var(--transition);
     outline: none;
 }
 
-input:focus {
+input:hover, select:hover { border-color: var(--text-dim); }
+
+input:focus, select:focus {
     border-color: var(--navy-light);
     background: #fff;
     box-shadow: 0 0 0 3px rgba(26,82,184,0.1);
 }
 
-input::placeholder {
-    color: var(--text-dim);
-}
+input::placeholder { color: var(--text-dim); }
 
 /* ── BUTTON ── */
 button, .btn {
@@ -367,37 +498,23 @@ button, .btn {
     font-size: 14px;
     font-weight: 600;
     letter-spacing: 0.2px;
-    transition: var(--transition);
+    transition: background var(--transition), transform var(--dur-instant) var(--ease-out), box-shadow var(--transition);
     position: relative;
-    overflow: hidden;
 }
 
-button::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: rgba(255,255,255,0);
-    transition: var(--transition);
-}
-
-button:hover {
+button:hover, .btn:hover {
     background: var(--navy-light);
     transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(26,82,184,0.25);
 }
 
-button:active {
-    transform: scale(0.98);
+button:active, .btn:active {
+    transform: scale(0.98) translateY(0);
+    transition-duration: var(--dur-instant);
 }
 
-/* accent variant */
-.btn-accent {
-    background: var(--accent);
-    color: var(--navy);
-}
-
-.btn-accent:hover {
-    background: #00d9bc;
-}
+.btn-accent { background: var(--accent); color: var(--navy); }
+.btn-accent:hover { background: var(--accent-light); box-shadow: 0 4px 14px rgba(0,194,168,0.3); }
 
 /* ── RESULT BOX ── */
 .result {
@@ -408,14 +525,10 @@ button:active {
     border-radius: 0 var(--radius-md) var(--radius-md) 0;
     font-size: 14px;
     color: var(--text-main);
-    animation: slideUp 0.3s ease;
+    animation: riseIn var(--dur-base) var(--ease-out) both;
 }
 
-.result strong {
-    color: var(--navy);
-    font-weight: 700;
-    font-size: 20px;
-}
+.result strong { color: var(--navy); font-weight: 700; font-size: 20px; }
 
 .result .result-label {
     font-size: 12px;
@@ -435,17 +548,13 @@ a.back {
     margin-top: 18px;
     color: var(--navy-light);
     font-size: 13px;
-    font-weight: 500;
+    font-weight: 600;
     text-decoration: none;
-    transition: var(--transition);
+    transition: color var(--transition), gap var(--transition);
 }
+a.back:hover { color: var(--accent); gap: 8px; }
 
-a.back:hover {
-    color: var(--accent);
-    gap: 8px;
-}
-
-/* ── CARD GRID (for dashboard) ── */
+/* ── CARD GRID (dashboard) ── */
 .card-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -460,7 +569,7 @@ a.back:hover {
     padding: 18px 16px;
     text-decoration: none;
     color: var(--text-main);
-    transition: var(--transition);
+    transition: border-color var(--transition), box-shadow var(--dur-base) var(--ease-out), transform var(--dur-base) var(--ease-out);
     display: flex;
     flex-direction: column;
     gap: 6px;
@@ -468,295 +577,271 @@ a.back:hover {
 
 .calc-card:hover {
     border-color: var(--navy-light);
-    box-shadow: 0 4px 18px rgba(11,46,110,0.09);
-    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(11,46,110,0.12);
+    transform: translateY(-3px);
 }
+.calc-card:active { transform: translateY(-1px); transition-duration: var(--dur-instant); }
 
 .calc-card-icon {
     width: 36px;
     height: 36px;
-    background: #eef2ff;
+    background: var(--accent-dim);
     border-radius: var(--radius-sm);
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 18px;
     margin-bottom: 4px;
+    transition: transform var(--dur-base) var(--ease-spring);
 }
+.calc-card:hover .calc-card-icon { transform: scale(1.08) rotate(-4deg); }
 
-.calc-card h4 {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--text-main);
-}
-
-.calc-card p {
-    font-size: 12px;
-    color: var(--text-muted);
-    line-height: 1.5;
-}
+.calc-card h4 { font-size: 13px; font-weight: 700; color: var(--text-main); }
+.calc-card p { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
 
 /* ── BADGE ── */
 .badge {
     display: inline-block;
-    font-size: 11px;
-    font-weight: 600;
-    padding: 3px 8px;
+    font-size: 10.5px;
+    font-weight: 700;
+    padding: 4px 9px;
     border-radius: 20px;
     background: var(--accent-dim);
     color: #007a6b;
-    letter-spacing: 0.2px;
+    letter-spacing: 0.3px;
+    margin-bottom: 10px;
 }
 
 /* ── DIVIDER ── */
-.divider {
-    height: 1px;
-    background: var(--border);
-    margin: 20px 0;
-}
+.divider { height: 1px; background: var(--border); margin: 20px 0; }
 
 /* ── FOOTER ── */
 .footer {
-    background: var(--navy);
-    color: rgba(255,255,255,0.9);
-    padding: 40px 24px 16px;
-    margin-top: auto;
+    background: var(--card-bg);
+    border-top: 1px solid var(--border);
+    padding: 28px 28px 20px;
 }
 
-.footer-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 32px;
-    max-width: 1100px;
-    margin: 0 auto 28px;
-}
-
-.footer h3, .footer h4 {
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: 0.8px;
-    text-transform: uppercase;
-    color: #fff;
-    margin-bottom: 12px;
+.footer-inner {
+    max-width: 760px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
 }
 
 .footer p {
-    font-size: 13px;
-    color: rgba(255,255,255,0.5);
-    line-height: 1.7;
+    font-size: 12px;
+    color: var(--text-dim);
 }
+
+.footer-links { display: flex; gap: 18px; }
 
 .footer a {
-    display: block;
-    color: rgba(255,255,255,0.55);
+    color: var(--text-muted);
     text-decoration: none;
-    font-size: 13px;
-    padding: 4px 0;
-    transition: var(--transition);
-}
-
-.footer a:hover {
-    color: var(--accent);
-}
-
-.footer-bottom {
-    text-align: center;
-    border-top: 1px solid rgba(255,255,255,0.08);
-    padding-top: 14px;
     font-size: 12px;
-    color: rgba(255,255,255,0.3);
+    font-weight: 500;
+    transition: color var(--transition);
+}
+.footer a:hover { color: var(--navy-light); }
+
+/* ── FOCUS VISIBILITY ── */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+.calc-card:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
 }
 
-/* ── MOBILE ── */
-@media (max-width: 768px) {
-    .hamburger { display: flex; }
-    .menu-toggle { display: none; }
-
-    .page-wrapper.shifted { margin-right: 0; }
-
-    .sidebar {
-        width: 100%;
-        top: 58px;
-    }
-
-    .container {
-        margin: 20px 14px;
-        padding: 22px 18px;
-        border-radius: var(--radius-md);
-    }
-
-    h1 { font-size: 19px; }
+/* ── RESPONSIVE ── */
+@media (max-width: 1023px) {
+    .content-area { padding: 24px 18px 48px; }
 }
 
-@media (min-width: 769px) {
-    .hamburger { display: none; }
+@media (max-width: 560px) {
+    .content-area { padding: 20px 14px 40px; }
+    h1 { font-size: 20px; }
+    .footer-inner { flex-direction: column; align-items: flex-start; }
 }
     </style>
 </head>
 
 <body>
 
-<!-- SIDEBAR OVERLAY -->
-<div class="sidebar-overlay" id="overlay" onclick="closeSidebar()"></div>
+<div class="shell">
 
-<!-- NAVBAR -->
-<div class="navbar">
-    <a href="/" class="logo">
-        <div class="logo-icon">
-            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-            </svg>
-        </div>
-        <div>
-            EOR Solver
-            <span class="logo-sub">Engineering Suite</span>
-        </div>
-    </a>
+    <!-- SIDEBAR OVERLAY (mobile) -->
+    <div class="sidebar-overlay" id="overlay" onclick="closeSidebar()"></div>
 
-    <div class="nav-right">
-        <!-- Desktop toggle -->
-        <button class="menu-toggle" onclick="toggleSidebar()" title="Toggle menu">☰</button>
-        <!-- Mobile hamburger -->
-        <div class="hamburger" onclick="toggleSidebar()" aria-label="Open menu">
-            <span></span><span></span><span></span>
-        </div>
-    </div>
-</div>
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
 
-<!-- SIDEBAR -->
-<div class="sidebar" id="sidebar">
-
-    <div class="sidebar-section">
-        <div class="sidebar-label">Overview</div>
-        <a href="/">
-            Dashboard
-            <span class="nav-dot"></span>
+        <a href="/" class="brand">
+            <div class="brand-mark">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                </svg>
+            </div>
+            <div class="brand-text">
+                <span class="b-name">EOR Solver</span>
+                <span class="b-sub">Engineering Suite</span>
+            </div>
         </a>
-    </div>
 
-    <div class="sidebar-divider"></div>
+        <nav class="sidebar-scroll">
 
-    <div class="sidebar-section">
-        <div class="sidebar-label">Overview</div>
-        <a href="/articleone/">How to Calculate Recovery Factor in EOR</a>
-        <a href="/articlethree/">Reservoir Engineering Formulas</a>
-        <a href="/articlefour/">EOR vs Primary Recovery</a>
-    </div>
-
-    <div class="sidebar-section">
-        <div class="sidebar-label">Sweep & Flow</div>
-        <a href="/mobility-ratio/">Mobility Ratio</a>
-        <a href="/areal-sweep/">Areal Sweep</a>
-        <a href="/volumetric-sweep/">Volumetric Sweep</a>
-        <a href="/fractional-flow/">Fractional Flow</a>
-        <a href="/fw/">Fractional Flow (Alt)</a>
-        <a href="/fw-dual/">Fractional Flow Dual</a>
-        <a href="/relperm/">Relative Permeability</a>
-    </div>
-
-    <div class="sidebar-divider"></div>
-
-    <div class="sidebar-section">
-        <div class="sidebar-label">Recovery & Timing</div>
-        <a href="/breakthrough-time/">Breakthrough</a>
-        <a href="/recovery-factor/">Recovery Factor</a>
-        <a href="/ooip/">Oil In Place (OOIP)</a>
-        <a href="/mmp/">MMP (CO₂)</a>
-    </div>
-
-    <div class="sidebar-divider"></div>
-
-    <div class="sidebar-section">
-        <div class="sidebar-label">Parameters</div>
-        <a href="/edbt/">EDBT</a>
-        <a href="/eabt/">EADT</a>
-        <a href="/tbt/">TBT</a>
-        <a href="/npbt/">NPBT</a>
-        <a href="/wibt/">WIBT</a>
-        <a href="/qibt/">QIBT</a>
-        <a href="/ns/">Ns</a>
-        <a href="/pv/">PV</a>
-        <a href="/slope/">Slope</a>
-    </div>
-
-    <div class="sidebar-divider"></div>
-
-    <div class="sidebar-section">
-        <div class="sidebar-label">Tools</div>
-        <a href="/unit-converter/">Unit Converter</a>
-        <a href="https://tordiportfilio.pythonanywhere.com" target="_blank">Portfolio ↗</a>
-    </div>
-
-</div>
-
-<!-- PAGE WRAPPER -->
-<div class="page-wrapper" id="pageWrapper">
-
-    <!-- CONTENT -->
-    <div class="container">
-        {% block content %}
-        {% endblock %}
-    </div>
-
-    <!-- FOOTER -->
-    <footer class="footer">
-        <div class="footer-container">
-            <div>
-                <h4>EOR Solver</h4>
-                <p>A professional calculator suite for Enhanced Oil Recovery engineering analysis and reservoir simulation.</p>
+            <div class="nav-group">
+                <a href="/">Dashboard</a>
             </div>
-            <div>
-                <h4>Calculators</h4>
+
+            <div class="sidebar-divider"></div>
+
+            <div class="nav-group">
+                <div class="nav-group-label">Overview</div>
+                <a href="/articleone/">How to Calculate Recovery Factor in EOR</a>
+                <a href="/articlethree/">Reservoir Engineering Formulas</a>
+                <a href="/articlefour/">EOR vs Primary Recovery</a>
+            </div>
+
+            <div class="nav-group">
+                <div class="nav-group-label">Sweep &amp; Flow</div>
+                <a href="/mobility/">Mobility</a>
                 <a href="/mobility-ratio/">Mobility Ratio</a>
-                <a href="/recovery-factor/">Recovery Factor</a>
+                <a href="/areal-sweep/">Areal Sweep</a>
+                <a href="/volumetric-sweep/">Volumetric Sweep</a>
                 <a href="/fractional-flow/">Fractional Flow</a>
-                <a href="/ooip/">OOIP</a>
+                <a href="/fw/">Fractional Flow (Alt)</a>
+                <a href="/fw-dual/">Fractional Flow Dual</a>
+                <a href="/relperm/">Relative Permeability</a>
             </div>
-            <div>
-                <h4>Resources</h4>
+
+            <div class="sidebar-divider"></div>
+
+            <div class="nav-group">
+                <div class="nav-group-label">Recovery &amp; Timing</div>
+                <a href="/breakthrough-time/">Breakthrough</a>
+                <a href="/recovery-factor/">Recovery Factor</a>
+                <a href="/ooip/">Oil In Place (OOIP)</a>
+                <a href="/mmp/">MMP (CO&#8322;)</a>
+            </div>
+
+            <div class="sidebar-divider"></div>
+
+            <div class="nav-group">
+                <div class="nav-group-label">Parameters</div>
+                <a href="/edbt/">EDBT</a>
+                <a href="/eabt/">EADT</a>
+                <a href="/tbt/">TBT</a>
+                <a href="/npbt/">NPBT</a>
+                <a href="/wibt/">WIBT</a>
+                <a href="/qibt/">QIBT</a>
+                <a href="/ns/">Ns</a>
+                <a href="/pv/">PV</a>
+                <a href="/slope/">Slope</a>
+                <a href="/dfw-dsw/">dfw/dSw</a>
+                <a href="/mobility_ratio_breakthrough/">After and Before Breakthrough</a>
+            </div>
+
+            <div class="sidebar-divider"></div>
+
+            <div class="nav-group">
+                <div class="nav-group-label">Tools</div>
+                <a href="/interpolation/">Interpolation</a>
                 <a href="/unit-converter/">Unit Converter</a>
-                <a href="https://tordiportfilio.pythonanywhere.com" target="_blank">Portfolio</a>
+                <a href="https://tordiportfilio.pythonanywhere.com" target="_blank" class="nav-external">
+                    Portfolio
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M7 17L17 7M17 7H7M17 7V17"/>
+                    </svg>
+                </a>
+            </div>
+
+        </nav>
+
+        <div class="sidebar-foot">© 2026 EOR Engineering Suite</div>
+
+    </aside>
+
+    <!-- MAIN COLUMN -->
+    <div class="main-col">
+
+        <!-- TOP BAR -->
+        <div class="topbar">
+            <div class="topbar-left">
+                <button class="menu-toggle" id="menuToggle" onclick="toggleSidebar()" aria-label="Toggle menu">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                    </svg>
+                </button>
+                <div class="breadcrumb-trail">
+                    <span>EOR Solver</span>
+                    <span class="sep">/</span>
+                    <span class="current" id="pageCrumb">{% block crumb %}Calculator{% endblock %}</span>
+                </div>
+            </div>
+            <div class="topbar-right">
+                <span class="status-pill"><span class="dot"></span> Live</span>
             </div>
         </div>
-        <div class="footer-bottom">
-            © 2026 EOR Engineering Suite — Built for Petroleum Engineering Analysis
+
+        <!-- CONTENT -->
+        <div class="content-area">
+            <div class="content-inner">
+                {% block content %}
+                {% endblock %}
+            </div>
         </div>
-    </footer>
+
+        <!-- FOOTER -->
+        <footer class="footer">
+            <div class="footer-inner">
+                <p>Built for Petroleum Engineering Analysis</p>
+                <div class="footer-links">
+                    <a href="/unit-converter/">Unit Converter</a>
+                    <a href="/recovery-factor/">Recovery Factor</a>
+                    <a href="https://tordiportfilio.pythonanywhere.com" target="_blank">Portfolio</a>
+                </div>
+            </div>
+        </footer>
+
+    </div>
 
 </div>
 
 <script>
     const sidebar = document.getElementById('sidebar');
     const overlay = document.getElementById('overlay');
-    const wrapper = document.getElementById('pageWrapper');
 
     function toggleSidebar() {
         const isOpen = sidebar.classList.toggle('open');
-        overlay.classList.toggle('active', isOpen && window.innerWidth <= 768);
-        if (window.innerWidth > 768) {
-            wrapper.classList.toggle('shifted', isOpen);
-        }
+        overlay.classList.toggle('active', isOpen);
     }
 
     function closeSidebar() {
         sidebar.classList.remove('open');
         overlay.classList.remove('active');
-        wrapper.classList.remove('shifted');
     }
 
     // Highlight active link
-    const links = document.querySelectorAll('.sidebar a');
-    links.forEach(link => {
+    document.querySelectorAll('.nav-group a').forEach(link => {
         if (link.href === window.location.href) {
             link.classList.add('active');
         }
     });
 
-    // Close sidebar on resize to mobile
+    // Close sidebar on Escape, and on resize to desktop
+    window.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && sidebar.classList.contains('open')) closeSidebar();
+    });
     window.addEventListener('resize', () => {
-        if (window.innerWidth <= 768) {
-            wrapper.classList.remove('shifted');
-        }
+        if (window.innerWidth >= 1024) closeSidebar();
     });
 </script>
 

@@ -1,0 +1,462 @@
+{% extends 'base.html' %}
+{% block title %}Linear Interpolation — EOR Solver{% endblock %}
+{% block content %}
+
+<style>
+.page-header {
+    text-align: center;
+    margin-bottom: 28px;
+}
+.page-header p {
+    font-size: 14px;
+    color: var(--text-muted);
+    max-width: 500px;
+    margin: 8px auto 0;
+    line-height: 1.6;
+}
+
+.model-tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 24px;
+}
+.model-tab {
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: var(--transition);
+    background: #fafbfe;
+    text-align: left;
+}
+.model-tab:hover {
+    border-color: var(--navy-light);
+    background: #f0f4ff;
+}
+.model-tab.active {
+    border-color: var(--navy-light);
+    background: #eef2ff;
+    box-shadow: 0 0 0 3px rgba(26,82,184,0.08);
+}
+.model-tab .mt-number {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    display: block;
+    margin-bottom: 4px;
+}
+.model-tab .mt-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--navy);
+    display: block;
+    margin-bottom: 2px;
+}
+.model-tab .mt-formula {
+    font-size: 11px;
+    font-family: var(--mono);
+    color: var(--text-muted);
+}
+.model-tab.active .mt-number { color: var(--navy-light); }
+
+.formula-block {
+    background: #f0f4ff;
+    border: 1px solid #d4ddf7;
+    border-radius: var(--radius-md);
+    padding: 14px 18px;
+    margin-bottom: 24px;
+    font-family: var(--mono);
+    font-size: 14px;
+    color: var(--navy-mid);
+    text-align: center;
+    transition: var(--transition);
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.formula-legend {
+    display: grid;
+    gap: 1px;
+    background: #d4ddf7;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    margin-bottom: 24px;
+}
+.formula-legend.cols-2 { grid-template-columns: 1fr 1fr; }
+.fl-cell {
+    background: #f8faff;
+    padding: 8px 12px;
+}
+.fl-cell .fl-sym {
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--navy-mid);
+    display: block;
+    margin-bottom: 2px;
+}
+.fl-cell .fl-desc {
+    font-family: var(--sans);
+    font-size: 11px;
+    color: var(--text-muted);
+    line-height: 1.4;
+}
+@media (max-width: 560px) {
+    .model-tabs { grid-template-columns: 1fr; }
+}
+
+.section-divider {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    padding: 4px 0 8px;
+    border-top: 1px solid var(--border);
+    margin: 4px 0 16px;
+}
+
+.input-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 20px;
+}
+@media (max-width: 560px) {
+    .input-grid { grid-template-columns: 1fr; }
+}
+
+.input-full { grid-column: 1 / -1; }
+
+.input-wrap { position: relative; }
+.input-wrap input {
+    margin-bottom: 18px;
+}
+.input-wrap select {
+    margin-bottom: 18px;
+}
+
+.model-panel { display: none; }
+.model-panel.active { display: contents; }
+
+.result-card {
+    margin-top: 24px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    animation: slideUp 0.35s ease both;
+}
+.result-card-header {
+    background: var(--navy);
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.result-card-header span {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.55);
+}
+.result-card-body {
+    padding: 22px 24px;
+    background: #fff;
+}
+.result-value-row {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+.result-value-row .val {
+    font-size: 44px;
+    font-weight: 700;
+    color: var(--navy);
+    line-height: 1;
+    font-family: var(--mono);
+    letter-spacing: -1px;
+}
+.result-value-row .unit {
+    font-size: 16px;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.metrics-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px;
+    margin-bottom: 16px;
+}
+.metric-block {
+    background: var(--surface, #f4f6fb);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+}
+.metric-block .mb-label {
+    font-size: 11px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+    display: block;
+    margin-bottom: 4px;
+}
+.metric-block .mb-val {
+    font-size: 18px;
+    font-weight: 700;
+    font-family: var(--mono);
+    color: var(--navy);
+}
+.metric-block .mb-sub {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
+.equation-trace {
+    background: #f0f4ff;
+    border: 1px solid #d4ddf7;
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--navy-mid);
+    margin-bottom: 16px;
+    line-height: 2;
+}
+
+.interpretation-box {
+    background: var(--surface, #f4f6fb);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.65;
+    border-left: 3px solid var(--accent);
+}
+</style>
+
+<!-- PAGE HEADER -->
+<div class="page-header">
+    <span class="badge">Numerical Methods</span>
+    <h1>Linear Interpolation</h1>
+    <p>Estimate an unknown Y for a given X, or an unknown X for a given Y, between two known data points.</p>
+</div>
+
+<!-- MODE SELECTOR TABS -->
+<div class="model-tabs" id="modelTabs">
+    <div class="model-tab active" data-model="solve_y" onclick="selectModel('solve_y')">
+        <span class="mt-number">Mode 1</span>
+        <span class="mt-name">Solve for Y</span>
+        <span class="mt-formula">y = y&#8321; + [(x &minus; x&#8321;)(y&#8322; &minus; y&#8321;)] / (x&#8322; &minus; x&#8321;)</span>
+    </div>
+    <div class="model-tab" data-model="solve_x" onclick="selectModel('solve_x')">
+        <span class="mt-number">Mode 2</span>
+        <span class="mt-name">Solve for X</span>
+        <span class="mt-formula">x = x&#8321; + [(y &minus; y&#8321;)(x&#8322; &minus; x&#8321;)] / (y&#8322; &minus; y&#8321;)</span>
+    </div>
+</div>
+
+<!-- ACTIVE FORMULA DISPLAY -->
+<div class="formula-block" id="formulaDisplay">
+    y = y&#8321; + [(x &minus; x&#8321;)(y&#8322; &minus; y&#8321;)] / (x&#8322; &minus; x&#8321;)
+</div>
+
+<!-- LEGEND (swaps with mode) -->
+<div class="formula-legend cols-2" id="legendY">
+    <div class="fl-cell">
+        <span class="fl-sym">x&#8321;, y&#8321;</span>
+        <span class="fl-desc">First known data point</span>
+    </div>
+    <div class="fl-cell">
+        <span class="fl-sym">x&#8322;, y&#8322;</span>
+        <span class="fl-desc">Second known data point</span>
+    </div>
+    <div class="fl-cell">
+        <span class="fl-sym">x</span>
+        <span class="fl-desc">Known X value to interpolate at</span>
+    </div>
+    <div class="fl-cell">
+        <span class="fl-sym">y</span>
+        <span class="fl-desc">Interpolated Y result</span>
+    </div>
+</div>
+
+<div class="formula-legend cols-2" id="legendX" style="display:none;">
+    <div class="fl-cell">
+        <span class="fl-sym">x&#8321;, y&#8321;</span>
+        <span class="fl-desc">First known data point</span>
+    </div>
+    <div class="fl-cell">
+        <span class="fl-sym">x&#8322;, y&#8322;</span>
+        <span class="fl-desc">Second known data point</span>
+    </div>
+    <div class="fl-cell">
+        <span class="fl-sym">y</span>
+        <span class="fl-desc">Known Y value to interpolate at</span>
+    </div>
+    <div class="fl-cell">
+        <span class="fl-sym">x</span>
+        <span class="fl-desc">Interpolated X result</span>
+    </div>
+</div>
+
+<!-- FORM -->
+<form method="POST">
+    {% csrf_token %}
+    <input type="hidden" name="mode" id="modeInput" value="solve_y">
+
+    <div class="section-divider">Known Data Points</div>
+    <div class="input-grid">
+        <div>
+            <label for="x1">X&#8321;</label>
+            <div class="input-wrap">
+                <input type="number" step="any" name="x1" id="x1" placeholder="e.g. 10" required>
+            </div>
+        </div>
+        <div>
+            <label for="y1">Y&#8321;</label>
+            <div class="input-wrap">
+                <input type="number" step="any" name="y1" id="y1" placeholder="e.g. 25" required>
+            </div>
+        </div>
+        <div>
+            <label for="x2">X&#8322;</label>
+            <div class="input-wrap">
+                <input type="number" step="any" name="x2" id="x2" placeholder="e.g. 20" required>
+            </div>
+        </div>
+        <div>
+            <label for="y2">Y&#8322;</label>
+            <div class="input-wrap">
+                <input type="number" step="any" name="y2" id="y2" placeholder="e.g. 45" required>
+            </div>
+        </div>
+    </div>
+
+    <div class="section-divider">Target Value</div>
+    <div class="input-grid">
+        <div id="xField" class="input-full">
+            <label for="x">X Value</label>
+            <div class="input-wrap">
+                <input type="number" step="any" name="x" id="x" placeholder="e.g. 15">
+            </div>
+        </div>
+        <div id="yField" class="input-full" style="display:none;">
+            <label for="y">Y Value</label>
+            <div class="input-wrap">
+                <input type="number" step="any" name="y" id="y" placeholder="e.g. 35">
+            </div>
+        </div>
+    </div>
+
+    <button type="submit">Calculate</button>
+</form>
+
+<!-- RESULT -->
+{% if result is not None %}
+
+<div class="result-card">
+    <div class="result-card-header">
+        <span>Result</span>
+        {% if mode == "solve_y" %}
+        <span>Interpolated Y</span>
+        {% else %}
+        <span>Interpolated X</span>
+        {% endif %}
+    </div>
+    <div class="result-card-body">
+
+        <div class="result-value-row">
+            <span class="val">{{ result|floatformat:6 }}</span>
+            {% if mode == "solve_y" %}
+            <span class="unit">y</span>
+            {% else %}
+            <span class="unit">x</span>
+            {% endif %}
+        </div>
+
+        <div class="metrics-row">
+            <div class="metric-block">
+                <span class="mb-label">x&#8321;, y&#8321;</span>
+                <span class="mb-val">{{ x1|floatformat:4 }}, {{ y1|floatformat:4 }}</span>
+            </div>
+            <div class="metric-block">
+                <span class="mb-label">x&#8322;, y&#8322;</span>
+                <span class="mb-val">{{ x2|floatformat:4 }}, {{ y2|floatformat:4 }}</span>
+            </div>
+            {% if mode == "solve_y" %}
+            <div class="metric-block">
+                <span class="mb-label">Given X</span>
+                <span class="mb-val">{{ x|floatformat:4 }}</span>
+            </div>
+            {% else %}
+            <div class="metric-block">
+                <span class="mb-label">Given Y</span>
+                <span class="mb-val">{{ y|floatformat:4 }}</span>
+            </div>
+            {% endif %}
+        </div>
+
+        {% if mode == "solve_y" %}
+        <div class="equation-trace">
+            y = y&#8321; + [(x &minus; x&#8321;)(y&#8322; &minus; y&#8321;)] / (x&#8322; &minus; x&#8321;)<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= {{ y1|floatformat:4 }} + [({{ x|floatformat:4 }} &minus; {{ x1|floatformat:4 }})({{ y2|floatformat:4 }} &minus; {{ y1|floatformat:4 }})] / ({{ x2|floatformat:4 }} &minus; {{ x1|floatformat:4 }})<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= <strong>{{ result|floatformat:6 }}</strong>
+        </div>
+        {% else %}
+        <div class="equation-trace">
+            x = x&#8321; + [(y &minus; y&#8321;)(x&#8322; &minus; x&#8321;)] / (y&#8322; &minus; y&#8321;)<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= {{ x1|floatformat:4 }} + [({{ y|floatformat:4 }} &minus; {{ y1|floatformat:4 }})({{ x2|floatformat:4 }} &minus; {{ x1|floatformat:4 }})] / ({{ y2|floatformat:4 }} &minus; {{ y1|floatformat:4 }})<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= <strong>{{ result|floatformat:6 }}</strong>
+        </div>
+        {% endif %}
+
+        {% if interpretation %}
+        <div class="interpretation-box">{{ interpretation }}</div>
+        {% endif %}
+
+    </div>
+</div>
+
+{% endif %}
+
+<a href="/" class="back">&#8592; Back to Dashboard</a>
+
+<script>
+function selectModel(mode) {
+    document.getElementById('modeInput').value = mode;
+    document.getElementById('mode') && (document.getElementById('mode').value = mode);
+
+    document.querySelectorAll('.model-tab').forEach(t => t.classList.remove('active'));
+    document.querySelector('[data-model="' + mode + '"]').classList.add('active');
+
+    var isY = mode === 'solve_y';
+
+    document.getElementById('xField').style.display = isY ? 'block' : 'none';
+    document.getElementById('yField').style.display = isY ? 'none'  : 'block';
+
+    document.getElementById('legendY').style.display = isY ? 'grid' : 'none';
+    document.getElementById('legendX').style.display = isY ? 'none' : 'grid';
+
+    document.getElementById('formulaDisplay').innerHTML = isY
+        ? 'y = y&#8321; + [(x &minus; x&#8321;)(y&#8322; &minus; y&#8321;)] / (x&#8322; &minus; x&#8321;)'
+        : 'x = x&#8321; + [(y &minus; y&#8321;)(x&#8322; &minus; x&#8321;)] / (y&#8322; &minus; y&#8321;)';
+}
+
+/* Restore active tab on page reload after POST */
+window.addEventListener('DOMContentLoaded', function () {
+    var saved = '{{ mode|default:"solve_y" }}';
+    selectModel(saved);
+});
+</script>
+
+{% endblock %}
