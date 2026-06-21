@@ -486,19 +486,18 @@ def wibt(request):
         # Interpretation
         # Interpretation
 
-    wibt_ratio = result / PV  # fraction of pore volume injected
 
-    if wibt_ratio < 0.10:
-        interpretation = "Very Poor Sweep . danger . Water reached the production well after contacting only a small portion of the reservoir pore volume . Severe channeling, fingering, or thief-zone flow is likely occurring . Large volumes of oil remain bypassed and unswept . Very early breakthrough indicates poor conformance and inefficient flood performance . Consider mobility control methods such as polymer flooding, profile modification, or injection pattern optimization."
-    elif wibt_ratio < 0.30:
-        interpretation = "Poor Sweep . warning . Only a limited portion of reservoir pore volume was contacted before breakthrough . Partial sweep with noticeable fingering and heterogeneity effects . Significant oil remains trapped in unswept regions . Waterflood is functioning but sweep efficiency remains low . Evaluate injection rates, well spacing, and reservoir heterogeneity."
-    elif wibt_ratio < 0.60:
-        interpretation = "Moderate Sweep . info . A reasonable fraction of pore volume was contacted before breakthrough . Mixed stable and unstable displacement behavior . Moderate oil recovery achieved prior to breakthrough . Typical waterflood performance with acceptable reservoir utilization . Monitor water cut and optimize injection strategy to improve sweep."
-    elif wibt_ratio < 0.80:
-        interpretation = "Good Sweep . success . Most reservoir pore volume was contacted before breakthrough occurred . Stable displacement front with limited channeling . High oil recovery achieved before water breakthrough . Efficient sweep and good reservoir conformance . Continue current flood management practices and monitor breakthrough progression."
-    else:
-        interpretation = "Excellent Sweep . primary . A very large portion of the reservoir pore volume was contacted before breakthrough . Highly stable piston-like displacement behavior . Maximum practical oil recovery before breakthrough . Excellent reservoir management and flood efficiency. Reservoir demonstrates strong sweep efficiency and excellent conformance control."
-        
+        if abs(result) < 0.10:
+            interpretation = "Very Poor Sweep . danger . Water reached the production well after contacting only a small portion of the reservoir pore volume . Severe channeling, fingering, or thief-zone flow is likely occurring . Large volumes of oil remain bypassed and unswept . Very early breakthrough indicates poor conformance and inefficient flood performance . Consider mobility control methods such as polymer flooding, profile modification, or injection pattern optimization."
+        elif abs(result) < 0.30:
+            interpretation = "Poor Sweep . warning . Only a limited portion of reservoir pore volume was contacted before breakthrough . Partial sweep with noticeable fingering and heterogeneity effects . Significant oil remains trapped in unswept regions . Waterflood is functioning but sweep efficiency remains low . Evaluate injection rates, well spacing, and reservoir heterogeneity."
+        elif abs(result) < 0.60:
+            interpretation = "Moderate Sweep . info . A reasonable fraction of pore volume was contacted before breakthrough . Mixed stable and unstable displacement behavior . Moderate oil recovery achieved prior to breakthrough . Typical waterflood performance with acceptable reservoir utilization . Monitor water cut and optimize injection strategy to improve sweep."
+        elif abs(result) < 0.80:
+            interpretation = "Good Sweep . success . Most reservoir pore volume was contacted before breakthrough occurred . Stable displacement front with limited channeling . High oil recovery achieved before water breakthrough . Efficient sweep and good reservoir conformance . Continue current flood management practices and monitor breakthrough progression."
+        else:
+            interpretation = "Excellent Sweep . primary . A very large portion of the reservoir pore volume was contacted before breakthrough . Highly stable piston-like displacement behavior . Maximum practical oil recovery before breakthrough . Excellent reservoir management and flood efficiency. Reservoir demonstrates strong sweep efficiency and excellent conformance control."
+            
     return render(request, "wibt.html", {
         "result": result,
         "interpretation": interpretation,
